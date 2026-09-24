@@ -109,12 +109,15 @@
   input.hexcode-input:focus{ color:var(--ink); box-shadow:0 0 0 3px rgba(36,35,34,.28); }
   .palette-bar{ display:flex; width:100%; height:14px; border-radius:999px; overflow:hidden; box-shadow:var(--shadow-inset-sm); margin-bottom:14px; }
   .palette-bar-seg{ height:100%; transition:width .15s ease; }
-  .palette-roles{ display:flex; flex-direction:column; gap:10px; }
-  .palette-role-row{ display:flex; align-items:center; gap:10px; }
+  .palette-roles{ display:flex; flex-direction:column; gap:14px; }
+  .palette-role-block{ display:flex; flex-direction:column; gap:6px; }
+  .palette-role-top{ display:flex; align-items:center; gap:10px; }
   .palette-role-label{ font-size:12px; font-weight:700; color:var(--ink-soft); width:64px; flex:none; }
   .palette-swatch{ width:32px; height:32px; border-radius:10px; flex:none; cursor:pointer; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--ink); position:relative; overflow:hidden; }
-  .palette-pct-input{ width:56px; text-align:right; }
-  .palette-pct-suffix{ font-size:12px; color:var(--ink-faint); }
+  .palette-role-slider-row{ display:flex; align-items:center; gap:10px; padding-left:74px; }
+  .palette-pct-readout{ font-size:11.5px; font-family:monospace; color:var(--ink-soft); width:34px; text-align:right; flex:none; }
+  .palette-total{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+  .palette-total.warn{ color:#B98900; }
   .image-field-row{ display:flex; align-items:center; gap:12px; }
   .image-preview{ width:72px; height:72px; border-radius:16px; overflow:hidden; background:var(--surface-2); box-shadow:var(--shadow-inset-sm); flex:none; display:flex; align-items:center; justify-content:center; }
   .image-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
@@ -444,14 +447,10 @@
   .profile-value{ font-size:13.5px; color:var(--ink); white-space:pre-wrap; line-height:1.7; }
   .profile-color-swatch{ display:inline-block; width:28px; height:28px; border-radius:8px; box-shadow:var(--ring); vertical-align:middle; }
   .profile-color-value{ display:inline-flex; align-items:center; gap:10px; }
-  .profile-palette-bar{ display:flex; width:100%; height:14px; border-radius:999px; overflow:hidden; box-shadow:var(--ring); margin-bottom:12px; }
+  .profile-palette-bar{ display:flex; width:100%; height:30px; border-radius:9px; overflow:hidden; box-shadow:var(--ring); margin-bottom:8px; }
   .profile-palette-bar-seg{ height:100%; }
-  .profile-palette-list{ display:flex; flex-direction:column; gap:8px; }
-  .profile-palette-item{ display:flex; align-items:center; gap:10px; }
-  .profile-palette-role-label{ font-size:12px; font-weight:700; color:var(--ink-soft); width:64px; flex:none; }
-  .profile-palette-item .profile-color-swatch{ width:22px; height:22px; border-radius:6px; }
-  .profile-palette-code{ font-size:12.5px; font-family:monospace; color:var(--ink); }
-  .profile-palette-pct{ font-size:11.5px; color:var(--ink-faint); margin-left:auto; }
+  .profile-palette-codes{ display:flex; flex-wrap:wrap; gap:4px 14px; }
+  .profile-palette-code-item{ font-size:11.5px; font-family:monospace; color:var(--ink-soft); }
   .profile-section-label{ font-size:13px; font-weight:800; color:var(--ink); margin:22px 0 12px; padding-top:16px; border-top:1px solid var(--line); }
   @media (max-width:700px){
     .profile-body{ flex-direction:column; height:auto; max-height:78vh; }
@@ -460,6 +459,9 @@
   }
   .modal-foot{ display:flex; justify-content:flex-end; gap:8px; flex:none; padding:16px 32px 28px; border-top:1px solid var(--line); }
   .multiselect-box{ display:flex; flex-wrap:wrap; gap:6px; border:none; border-radius:var(--radius-sm); padding:8px; max-height:130px; overflow-y:auto; background:var(--surface-2); box-shadow:none; }
+  .tag-add-row{ display:flex; gap:8px; margin-top:8px; }
+  .tag-add-row input{ flex:1; }
+  .tag-add-row .btn{ flex:none; padding:6px 16px; }
   .ms-chip{ font-size:12px; padding:4px 10px; border-radius:999px; border:none; background:var(--bg); font-weight:700; color:var(--ink-soft); box-shadow:var(--shadow-inset-sm), var(--ring); cursor:pointer; }
   .ms-chip:hover{ box-shadow:var(--shadow-inset-sm), var(--ring-hover); }
   .ms-chip.on{ background:var(--accent-deep); color:#fff; box-shadow:var(--shadow-sm); }
@@ -838,8 +840,8 @@ const State = {
 
 const PRESET_COLORS = ['#6C4CF0','#E24E6B','#E8843F','#D6A72E','#4CAE50','#0FA394','#3F7FE0','#7C5CFC','#D6588C','#726D93'];
 const PALETTE_ROLES = [
-  {key:'color', pctKey:'colorMainPct', label:'メイン', def:'#6C4CF0', defPct:60},
   {key:'colorBase', pctKey:'colorBasePct', label:'ベース', def:'#F8F8F7', defPct:30},
+  {key:'color', pctKey:'colorMainPct', label:'メイン', def:'#6C4CF0', defPct:60},
   {key:'colorAccent', pctKey:'colorAccentPct', label:'アクセント', def:'#E24E6B', defPct:10}
 ];
 
@@ -1144,7 +1146,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
   const scrollHost = el('div', {class:'modal-scroll'});
   scrollHost.appendChild(el('h3', {}, [title]));
   const fieldsHost = wide ? el('div', {class:'form-grid'}) : scrollHost;
-  const FULL_WIDTH_TYPES = ['textarea','image','imageList','color','palette','multiselect','pair'];
+  const FULL_WIDTH_TYPES = ['textarea','image','imageList','color','palette','multiselect','tags','pair'];
 
   const fieldRefs = {};
   const imageSizeGetters = [];
@@ -1312,10 +1314,17 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
           barEl.appendChild(el('div', {class:'palette-bar-seg', style:`background:${r.color}; width:${Math.max(r.pct,0)/total*100}%;`}));
         });
       }
+      const totalEl = el('div', {class:'palette-total'});
+      function refreshTotal(){
+        const total = state.reduce((s,r)=> s + Math.max(r.pct,0), 0);
+        totalEl.textContent = `合計 ${total}%`;
+        totalEl.classList.toggle('warn', total !== 100);
+      }
       const rolesHost = el('div', {class:'palette-roles'});
       state.forEach(r=>{
-        const roleRow = el('div', {class:'palette-role-row'});
-        roleRow.appendChild(el('span', {class:'palette-role-label'}, [r.label]));
+        const roleBlock = el('div', {class:'palette-role-block'});
+        const topRow = el('div', {class:'palette-role-top'});
+        topRow.appendChild(el('span', {class:'palette-role-label'}, [r.label]));
         const swatchBtn = el('label', {class:'palette-swatch', style:`background:${r.color};`});
         const colorInput = el('input', {type:'color', style:'opacity:0; width:1px; height:1px; position:absolute;'});
         colorInput.value = r.color;
@@ -1330,19 +1339,27 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
           if (/^#[0-9A-Fa-f]{6}$/.test(v)){ r.color = v; colorInput.value = v; swatchBtn.style.background = v; hexInput.value = v.toUpperCase(); refreshBar(); }
           else hexInput.value = r.color.toUpperCase();
         });
-        const pctInput = el('input', {type:'number', min:'0', max:'100', class:'palette-pct-input'});
-        pctInput.value = r.pct;
-        pctInput.addEventListener('input', ()=>{ r.pct = Math.max(0, Math.min(100, parseInt(pctInput.value)||0)); refreshBar(); });
         swatchBtn.appendChild(colorInput);
-        roleRow.appendChild(swatchBtn);
-        roleRow.appendChild(hexInput);
-        roleRow.appendChild(pctInput);
-        roleRow.appendChild(el('span', {class:'palette-pct-suffix'}, ['%']));
-        rolesHost.appendChild(roleRow);
+        topRow.appendChild(swatchBtn);
+        topRow.appendChild(hexInput);
+        roleBlock.appendChild(topRow);
+        const sliderRow = el('div', {class:'palette-role-slider-row'});
+        const pctSlider = el('input', {type:'range', class:'zoom-range palette-pct-slider', min:'0', max:'100', step:'1'});
+        pctSlider.value = r.pct;
+        const pctReadout = el('span', {class:'palette-pct-readout'}, [`${r.pct}%`]);
+        pctSlider.addEventListener('input', ()=>{
+          r.pct = parseInt(pctSlider.value)||0; pctReadout.textContent = `${r.pct}%`; refreshBar(); refreshTotal();
+        });
+        sliderRow.appendChild(pctSlider);
+        sliderRow.appendChild(pctReadout);
+        roleBlock.appendChild(sliderRow);
+        rolesHost.appendChild(roleBlock);
       });
       refreshBar();
+      refreshTotal();
       wrap.appendChild(barEl);
       wrap.appendChild(rolesHost);
+      wrap.appendChild(totalEl);
       if (f.hint) wrap.appendChild(el('div', {class:'hint'}, [f.hint]));
       state.forEach(r=>{
         fieldRefs[r.key] = { get value(){ return r.color; } };
@@ -1374,6 +1391,40 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
       fieldRefs[f.key] = { get value(){ return Array.from(selected); } };
       fieldsHost.appendChild(wrap);
       if (f.hint) wrap.appendChild(el('div', {class:'hint'}, [f.hint]));
+      return;
+    } else if (f.type==='tags'){
+      const selected = new Set(initial[f.key] || (initial.role ? [initial.role] : []));
+      const box = el('div', {class:'multiselect-box'});
+      function renderChips(){
+        box.innerHTML = '';
+        const allOptions = Array.from(new Set([...(f.options||[]), ...selected]));
+        allOptions.forEach(v=>{
+          const chip = el('div', {class:'ms-chip'+(selected.has(v)?' on':''), onclick:()=>{
+            if (selected.has(v)) selected.delete(v); else selected.add(v);
+            renderChips();
+          }}, [v]);
+          box.appendChild(chip);
+        });
+      }
+      renderChips();
+      wrap.appendChild(box);
+      const addRow = el('div', {class:'tag-add-row'});
+      const addInput = el('input', {type:'text', placeholder:'新しい役割を入力してEnter'});
+      const addBtn = el('button', {type:'button', class:'btn btn-sm'}, ['追加']);
+      function addTag(){
+        const v = addInput.value.trim();
+        if (!v) return;
+        selected.add(v);
+        addInput.value = '';
+        renderChips();
+      }
+      addBtn.addEventListener('click', addTag);
+      addInput.addEventListener('keydown', (e)=>{ if (e.key==='Enter'){ e.preventDefault(); addTag(); } });
+      addRow.appendChild(addInput); addRow.appendChild(addBtn);
+      wrap.appendChild(addRow);
+      if (f.hint) wrap.appendChild(el('div', {class:'hint'}, [f.hint]));
+      fieldRefs[f.key] = { get value(){ return Array.from(selected); } };
+      fieldsHost.appendChild(wrap);
       return;
     } else {
       input = el('input', {type: f.type||'text', placeholder: f.placeholder||''});
@@ -1596,6 +1647,12 @@ const CHARACTER_SORTS = [['created','登録順（追加した順）'], ['name','
 function charById(id){ return State.data.characters.find(c=>c.id===id); }
 function charReading(c){ return [c.surnameReading, c.givenNameReading].filter(Boolean).join(' '); }
 function charFullName(c){ return [c.surname, c.givenName, c.middleName].filter(Boolean).join(' '); }
+function charRoles(c){ return Array.isArray(c.roles) && c.roles.length ? c.roles : (c.role ? [c.role] : []); }
+function projectRoleOptions(){
+  const set = new Set(ROLE_OPTIONS.map(o=>o.value));
+  State.data.characters.forEach(c=> charRoles(c).forEach(r=> set.add(r)));
+  return Array.from(set);
+}
 function charBirthYear(c){ return c.birthYear!=null ? c.birthYear : extractYear(c.birth); }
 function charDeathYear(c){ return c.deathYear!=null ? c.deathYear : extractYear(c.death); }
 function charAge(c){ return c.age!=null ? c.age : null; }
@@ -1605,7 +1662,7 @@ let charSearchText = '';
 function sortCharacters(list){
   const out = [...list];
   if (charSortKey === 'name') out.sort((a,b)=> (a.name||'').localeCompare(b.name||'', 'ja'));
-  else if (charSortKey === 'role') out.sort((a,b)=> (a.role||'').localeCompare(b.role||'', 'ja'));
+  else if (charSortKey === 'role') out.sort((a,b)=> charRoles(a).join('、').localeCompare(charRoles(b).join('、'), 'ja'));
   else if (charSortKey === 'custom') out.sort((a,b)=> (a.order??0)-(b.order??0));
   return out;
 }
@@ -1613,7 +1670,7 @@ function filterCharacters(list){
   const q = charSearchText.trim().toLowerCase();
   return list.filter(c=>{
     if (!q) return true;
-    const hay = [c.name, charReading(c), c.role, c.affiliation, c.personality, c.background, c.notes].filter(Boolean).join(' ').toLowerCase();
+    const hay = [c.name, charReading(c), ...charRoles(c), c.affiliation, c.personality, c.background, c.notes].filter(Boolean).join(' ').toLowerCase();
     return hay.includes(q);
   });
 }
@@ -1788,9 +1845,6 @@ function openCharacterForm(existing){
     initial,
     wide: true,
     fields: [
-      {key:'image', label:'アイコン画像（任意）', type:'image', hint:'アップロードすると自動で縮小されます。設定しない場合はイメージカラーで表示されます'},
-      {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, maxW:640, maxH:900, maxBytes:280000, hint:'プロフィール画面に大きく表示されます。透過PNGの全身イラストがおすすめです（背景は透過されたまま表示されます）。画像は他の画像欄と容量を共有するので、下の「画像合計」の表示を目安にしてください'},
-      {key:'refGallery', label:'設定資料（任意・複数可）', type:'imageList', maxW:900, maxH:900, maxBytes:200000, hint:'三面図など好きな画像をまとめられます。プロフィール画面ではボタンを押したときだけ表示されます'},
       {section:'名前'},
       {type:'pair', label:'氏名', fields:[
         {key:'surname', placeholder:'例: 山田'},
@@ -1804,9 +1858,8 @@ function openCharacterForm(existing){
       {key:'name', label:'表示名', type:'text', placeholder:'例: 主人公 太郎', hint:'キャラクター一覧・関係図など、他のタブでの表示に使われる名前です。空欄なら苗字・名前・ミドルネームから自動で作成されます', full:true},
       {section:'基本情報'},
       {key:'tagline', label:'キャッチコピー・紹介文（任意）', type:'textarea', rows:2, placeholder:'例: 運命に導かれし孤高の剣士', full:true, hint:'プロフィール画面で名前のすぐ下に表示されます。未入力なら表示されません'},
-      {key:'role', label:'役割', type:'combo', options:ROLE_OPTIONS, placeholder:'例: 主人公 / 語り部 など自由に入力できます', hint:'候補から選ぶか、自由に入力してください', full:true},
+      {key:'roles', label:'役割（複数選択可）', type:'tags', options:projectRoleOptions(), hint:'候補から選ぶか、新しい役割をその場で追加できます。追加した役割はこの作品の他のキャラクターでも選べるようになります', full:true},
       {key:'affiliation', label:'所属', type:'text', placeholder:'例: 〇〇学園'},
-      {type:'palette', label:'配色（メイン・ベース・アクセント）', hint:'メインカラーはキャラ一覧やカードの縁取りなど、これまでの「イメージカラー」と同じ場所に使われます。割合はプロフィール画面の帯グラフに反映されます'},
       {key:'birthYear', label:'生年', type:'number', placeholder:'例: 1005'},
       {key:'deathYear', label:'没年（存命なら空欄）', type:'number', placeholder:'例: 1023'},
       {key:'age', label:'年齢（任意）', type:'number', placeholder:'例: 18'},
@@ -1817,7 +1870,13 @@ function openCharacterForm(existing){
       {key:'appearance', label:'外見', type:'textarea', placeholder:'背格好、服装の特徴など', rows:2},
       {key:'personality', label:'性格', type:'textarea', placeholder:'性格や口癖など', rows:2},
       {key:'background', label:'背景・経歴', type:'textarea', placeholder:'生い立ちや設定の詳細', rows:3},
-      {key:'notes', label:'メモ', type:'textarea', placeholder:'その他の覚え書き', rows:2}
+      {key:'notes', label:'メモ', type:'textarea', placeholder:'その他の覚え書き', rows:2},
+      {section:'画像'},
+      {key:'image', label:'アイコン画像（任意）', type:'image', hint:'アップロードすると自動で縮小されます。設定しない場合はイメージカラーで表示されます'},
+      {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, maxW:640, maxH:900, maxBytes:280000, hint:'プロフィール画面に大きく表示されます。透過PNGの全身イラストがおすすめです（背景は透過されたまま表示されます）。画像は他の画像欄と容量を共有するので、下の「画像合計」の表示を目安にしてください'},
+      {key:'refGallery', label:'設定資料（任意・複数可）', type:'imageList', maxW:900, maxH:900, maxBytes:200000, hint:'三面図など好きな画像をまとめられます。プロフィール画面ではボタンを押したときだけ表示されます'},
+      {section:'配色'},
+      {type:'palette', label:'配色（メイン・ベース・アクセント）', hint:'メインカラーはキャラ一覧やカードの縁取りなど、これまでの「イメージカラー」と同じ場所に使われます。割合はプロフィール画面の帯グラフに反映されます'}
     ],
     onReady: (fieldRefs)=>{
       const surnameEl = fieldRefs.surname, givenEl = fieldRefs.givenName, middleEl = fieldRefs.middleName, nameEl = fieldRefs.name;
@@ -1872,17 +1931,10 @@ function buildPaletteBlock(c){
     bar.appendChild(el('div', {class:'profile-palette-bar-seg', style:`background:${c[r.key]}; width:${pct/total*100}%;`}));
   });
   wrap.appendChild(bar);
-  const list = el('div', {class:'profile-palette-list'});
-  active.forEach(r=>{
-    const pct = c[r.pctKey] ?? r.defPct;
-    list.appendChild(el('div', {class:'profile-palette-item'}, [
-      el('span', {class:'profile-palette-role-label'}, [r.label]),
-      el('span', {class:'profile-color-swatch', style:`background:${c[r.key]};`}),
-      el('span', {class:'profile-palette-code'}, [c[r.key].toUpperCase()]),
-      el('span', {class:'profile-palette-pct'}, [`${pct}%`])
-    ]));
-  });
-  wrap.appendChild(list);
+  const codesLine = el('div', {class:'profile-palette-codes'},
+    active.map(r=> el('span', {class:'profile-palette-code-item'}, [`${r.label} ${c[r.key].toUpperCase()}`]))
+  );
+  wrap.appendChild(codesLine);
   return wrap;
 }
 function openCharacterProfile(c){
@@ -1917,7 +1969,7 @@ function openCharacterProfile(c){
     c.tagline ? el('div', {class:'profile-tagline'}, [c.tagline]) : null,
     el('div', {class:'profile-info-meta'}, [
       charReading(c) ? el('span', {class:'ch-reading'}, [charReading(c)]) : null,
-      c.role ? el('span', {class:'ch-role'}, [c.role]) : null
+      ...charRoles(c).map(r=> el('span', {class:'ch-role'}, [r]))
     ])
   ]));
 
