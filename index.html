@@ -313,10 +313,6 @@
   .tl-title{ font-weight:800; font-size:15px; margin-top:2px; }
   .tl-chars{ display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
   .char-chip{ font-size:11px; font-weight:700; padding:2px 9px; border-radius:999px; color:#fff; }
-  .tl-char-section{ margin-bottom:28px; }
-  .tl-char-section:last-child{ margin-bottom:0; }
-  .tl-char-head{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:15px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--line); }
-  .tl-char-dot{ width:10px; height:10px; border-radius:50%; flex:none; }
 
   /* Plot */
   .plot-list{ display:flex; flex-direction:column; gap:12px; }
@@ -913,6 +909,12 @@ function resizeImageFile(file, maxW, maxH, maxBytes){
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
+        const pngUrl = canvas.toDataURL('image/png');
+        if (pngUrl.length <= maxBytes*1.37){ resolve(pngUrl); return; }
+        // Too large to keep as lossless PNG: flatten onto a neutral background and fall back to JPEG.
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fillStyle = '#F4F3F1';
+        ctx.fillRect(0, 0, w, h);
         let quality = 0.88, dataUrl = canvas.toDataURL('image/jpeg', quality);
         let attempts = 0;
         while (dataUrl.length > maxBytes*1.37 && attempts < 6){
@@ -1521,8 +1523,7 @@ function buildCharacterGallery(list){
   list.forEach((c,i)=>{
     const color = c.color || '#6C4CF0';
     const tile = el('div', {class:'gallery-tile fade-in', style:`--gc:${color}; animation-delay:${i*30}ms`, onclick:()=>openCharacterProfile(c)});
-    if (c.standingImage) tile.appendChild(el('img', {src:c.standingImage, style:'object-fit:contain; background:'+hexToRgba(color,0.18)}));
-    else if (c.image) tile.appendChild(el('img', {src:c.image}));
+    if (c.image) tile.appendChild(el('img', {src:c.image}));
     else tile.appendChild(el('div', {class:'gt-noimg', style:`background:${color}; color:${contrastColor(color)}`}, [(c.name||'?').charAt(0)]));
     tile.appendChild(el('div', {class:'gt-label'}, [
       el('div', {class:'gt-name'}, [c.name || '(名前未設定)'])
@@ -1980,7 +1981,7 @@ function openRelationshipForm(existing){
 
 /* ============================= TIMELINE ============================= */
 let timelineViewMode = 'world';
-let timelineTableFilter = 'all';
+let timelineCharFilter = null;
 function buildTimelineList(events){
   const tl = el('div', {class:'timeline'});
   events.forEach(t=>{
@@ -2017,79 +2018,57 @@ function buildTimelineWorld(){
 function buildTimelineByCharacter(){
   const outer = el('div', {});
   const orderedChars = [...State.data.characters].sort((a,b)=>(a.order??0)-(b.order??0));
-  let any = false;
-  orderedChars.forEach(c=>{
-    const events = State.data.timeline.filter(t=> t.charIds && t.charIds.includes(c.id)).sort((a,b)=>(a.order??0)-(b.order??0));
-    if (!events.length) return;
-    any = true;
-    const section = el('div', {class:'tl-char-section'});
-    section.appendChild(el('div', {class:'tl-char-head'}, [
-      el('span', {class:'tl-char-dot', style:`background:${c.color||'#6C4CF0'}`}),
-      el('span', {}, [charFullName(c)]),
-      el('button', {class:'btn btn-sm', style:'margin-left:auto;', onclick:()=>openTimelineForm(null, c.id)}, ['＋ このキャラの出来事を追加'])
-    ]));
-    const tl = buildTimelineList(events);
-    section.appendChild(tl);
-    makeDraggableList(tl, events, 'timeline');
-    outer.appendChild(section);
-  });
-  if (!any) outer.appendChild(el('div', {class:'empty-state'}, ['キャラクターに紐づく出来事はまだありません。出来事の編集画面で「関連キャラクター」を設定してください。']));
-  return outer;
-}
-function buildTimelineTable(){
-  const outer = el('div', {});
-  const toolbar = el('div', {class:'toolbar'});
-  const filterSelect = el('select', {style:'width:auto;'});
-  const filterOpts = [['all','すべて'], ['world','世界観全体']].concat(
-    [...State.data.characters].sort((a,b)=>(a.order??0)-(b.order??0)).map(c=>[c.id, charFullName(c)])
-  );
-  filterOpts.forEach(([value,label])=>{
-    const opt = el('option', {value}, [label]);
-    if (value===timelineTableFilter) opt.setAttribute('selected','selected');
-    filterSelect.appendChild(opt);
-  });
-  filterSelect.addEventListener('change', ()=>{ timelineTableFilter = filterSelect.value; renderTimeline(); });
-  toolbar.appendChild(filterSelect);
-  outer.appendChild(toolbar);
-
-  let rows = [...State.data.timeline].sort((a,b)=>(a.order??0)-(b.order??0));
-  if (timelineTableFilter === 'world') rows = rows.filter(isWorldEvent);
-  else if (timelineTableFilter !== 'all') rows = rows.filter(t=> t.charIds && t.charIds.includes(timelineTableFilter));
-
-  if (!rows.length){
-    outer.appendChild(el('div', {class:'empty-state'}, ['該当する出来事がありません。']));
+  if (!orderedChars.length){
+    outer.appendChild(el('div', {class:'empty-state'}, ['まずキャラクターを登録してください。']));
     return outer;
   }
-  const tableWrap = el('div', {class:'nickname-table-wrap'});
-  const table = el('table', {class:'nickname-table'});
-  const thead = el('thead', {});
-  thead.appendChild(el('tr', {}, [
-    el('th', {}, ['時期']), el('th', {}, ['出来事']), el('th', {}, ['種別']), el('th', {}, ['関連キャラクター']), el('th', {}, [''])
-  ]));
-  table.appendChild(thead);
-  const tbody = el('tbody', {});
-  rows.forEach(t=>{
-    const tr = el('tr', {});
-    tr.appendChild(el('td', {}, [(t.dateLabel||'（時期未設定）') + (t.isFlashback?'（回想）':'')]));
-    tr.appendChild(el('td', {}, [t.title || '(無題の出来事)']));
-    const world = isWorldEvent(t);
-    tr.appendChild(el('td', {style:'text-align:center;'}, [world ? '世界' : 'キャラ']));
-    const charsTd = el('td', {});
-    if (!world) t.charIds.forEach(cid=>{ const c = charById(cid); if (c) charsTd.appendChild(el('span', {class:'char-chip', style:`background:${c.color||'#6C4CF0'}; margin:2px;`}, [c.name])); });
-    tr.appendChild(charsTd);
-    tr.appendChild(el('td', {}, [ el('button', {class:'btn btn-sm', onclick:()=>openTimelineForm(t)}, ['編集']) ]));
-    tbody.appendChild(tr);
+  if (!timelineCharFilter || !orderedChars.some(c=>c.id===timelineCharFilter)) timelineCharFilter = orderedChars[0].id;
+  const toolbar = el('div', {class:'toolbar'});
+  const charSelect = el('select', {style:'width:auto;'});
+  orderedChars.forEach(c=>{
+    const opt = el('option', {value:c.id}, [charFullName(c)]);
+    if (c.id===timelineCharFilter) opt.setAttribute('selected','selected');
+    charSelect.appendChild(opt);
   });
-  table.appendChild(tbody);
-  tableWrap.appendChild(table);
-  outer.appendChild(tableWrap);
+  charSelect.addEventListener('change', ()=>{ timelineCharFilter = charSelect.value; renderTimeline(); });
+  toolbar.appendChild(charSelect);
+  outer.appendChild(toolbar);
+
+  const c = charById(timelineCharFilter);
+  const by = charBirthYear(c), dy = charDeathYear(c), ageVal = charAge(c);
+  if (by!=null || dy!=null){
+    const parts = [`生: ${by!=null?by:'?'}`, `没: ${dy!=null?dy:'存命'}`];
+    if (ageVal!=null) parts.push(`享年${ageVal}`);
+    outer.appendChild(el('div', {class:'hint', style:'margin:-4px 0 12px;'}, [parts.join(' / ')]));
+  }
+
+  const events = State.data.timeline.filter(t=> t.charIds && t.charIds.includes(timelineCharFilter)).sort((a,b)=>(a.order??0)-(b.order??0));
+  const addBtn = el('button', {class:'btn btn-sm', style:'margin-bottom:14px;', onclick:()=>openTimelineForm(null, timelineCharFilter)}, ['＋ この人物の出来事を追加']);
+  outer.appendChild(addBtn);
+  if (!events.length){
+    outer.appendChild(el('div', {class:'empty-state'}, [`「${charFullName(c)}」に紐づく出来事はまだありません。`]));
+    return outer;
+  }
+  outer.appendChild(el('div', {class:'hint', style:'margin:-6px 0 10px;'}, ['カードをつかんでドラッグすると順番を変更できます']));
+  const tl = buildTimelineList(events);
+  outer.appendChild(tl);
+  makeDraggableList(tl, events, 'timeline');
+  return outer;
+}
+function buildTimelineAll(){
+  const outer = el('div', {});
+  const events = [...State.data.timeline].sort((a,b)=>(a.order??0)-(b.order??0));
+  outer.appendChild(el('div', {class:'hint', style:'margin:-6px 0 10px;'}, ['世界観全体とキャラクター個別の出来事をまとめて表示しています（カードをつかんでドラッグすると順番を変更できます）']));
+  const tl = buildTimelineList(events);
+  outer.appendChild(tl);
+  makeDraggableList(tl, events, 'timeline');
   return outer;
 }
 function renderTimeline(){
   const view = document.getElementById('view-timeline');
   view.innerHTML = '';
   const toggle = buildViewToggle('timeline', [
-    {value:'world', label:'世界年表'}, {value:'character', label:'キャラ年表'}, {value:'table', label:'一覧表'}
+    {value:'world', label:'世界年表'}, {value:'character', label:'キャラ年表'}, {value:'all', label:'一覧'}
   ], timelineViewMode, (mode)=>{ timelineViewMode=mode; renderTimeline(); });
   view.appendChild(el('div', {class:'content-head'}, [
     el('div', {}, [ el('h2', {}, ['年表']), el('div', {class:'sub'}, [`${State.data.timeline.length} 件の出来事`]) ]),
@@ -2102,7 +2081,7 @@ function renderTimeline(){
     view.appendChild(el('div', {class:'empty-state'}, ['まだ出来事が登録されていません。']));
     return;
   }
-  if (timelineViewMode === 'table'){ view.appendChild(buildTimelineTable()); return; }
+  if (timelineViewMode === 'all'){ view.appendChild(buildTimelineAll()); return; }
   if (timelineViewMode === 'character'){ view.appendChild(buildTimelineByCharacter()); return; }
   view.appendChild(buildTimelineWorld());
 }
