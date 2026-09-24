@@ -114,6 +114,13 @@
   .crop-viewport{ position:relative; overflow:hidden; border-radius:50%; box-shadow:var(--shadow-inset), 0 0 0 3px var(--bg), 0 0 0 5px var(--line-strong); cursor:grab; touch-action:none; background:var(--surface-2); }
   .crop-viewport:active{ cursor:grabbing; }
   .crop-img{ position:absolute; left:0; top:0; user-select:none; pointer-events:none; }
+  .zoom-range{ -webkit-appearance:none; appearance:none; flex:1; height:14px; background:transparent; cursor:pointer; }
+  .zoom-range::-webkit-slider-runnable-track{ height:4px; border-radius:999px; background:var(--line-strong); }
+  .zoom-range::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:13px; height:13px; border-radius:999px; background-color:var(--line-strong); border:2.5px solid var(--bg); background-clip:padding-box; margin-top:-4.5px; transition:background-color .15s; }
+  .zoom-range:hover::-webkit-slider-thumb{ background-color:var(--ink-faint); }
+  .zoom-range::-moz-range-track{ height:4px; border-radius:999px; background:var(--line-strong); }
+  .zoom-range::-moz-range-thumb{ width:13px; height:13px; border-radius:999px; background-color:var(--line-strong); border:2.5px solid var(--bg); background-clip:padding-box; transition:background-color .15s; }
+  .zoom-range:hover::-moz-range-thumb{ background-color:var(--ink-faint); }
   .image-field-controls{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
   .image-field-controls input[type=file]{ font-size:12px; padding:0; border:none; }
   .image-field-controls .btn{ padding:4px 10px; font-size:11px; }
@@ -306,6 +313,10 @@
   .tl-title{ font-weight:800; font-size:15px; margin-top:2px; }
   .tl-chars{ display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
   .char-chip{ font-size:11px; font-weight:700; padding:2px 9px; border-radius:999px; color:#fff; }
+  .tl-char-section{ margin-bottom:28px; }
+  .tl-char-section:last-child{ margin-bottom:0; }
+  .tl-char-head{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:15px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+  .tl-char-dot{ width:10px; height:10px; border-radius:50%; flex:none; }
 
   /* Plot */
   .plot-list{ display:flex; flex-direction:column; gap:12px; }
@@ -366,14 +377,29 @@
     letter-spacing:.05em; padding-bottom:6px; margin:14px 0 4px; border-bottom:1px solid var(--line);
   }
   .form-section-title:first-child{ margin-top:0; }
-  .profile-head{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
-  .profile-avatar{ width:56px; height:56px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:22px; }
-  .profile-avatar-img{ width:56px; height:56px; border-radius:50%; object-fit:cover; flex:none; box-shadow:0 0 0 3px var(--cc,var(--accent)); }
+  .profile-modal{ max-width:640px; }
+  .profile-hero{
+    position:relative; margin:-32px -32px 20px; height:320px; overflow:hidden;
+    border-radius:var(--radius-lg) var(--radius-lg) 0 0; display:flex; align-items:flex-end; justify-content:center;
+  }
+  .profile-hero-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center bottom; }
+  .profile-hero-icon{
+    width:128px; height:128px; border-radius:50%; margin-bottom:56px; object-fit:cover; flex:none;
+    box-shadow:0 0 0 6px var(--bg), var(--shadow);
+  }
+  .profile-hero-icon-fallback{ display:flex; align-items:center; justify-content:center; font-weight:800; font-size:50px; }
+  .profile-hero-scrim{ position:absolute; left:0; right:0; bottom:0; height:130px; background:linear-gradient(transparent, rgba(20,16,24,.62) 75%); pointer-events:none; }
+  .profile-hero-text{ position:absolute; left:24px; right:24px; bottom:16px; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.4); }
+  .profile-hero-name{ font-size:23px; font-weight:800; line-height:1.25; }
+  .profile-hero-meta{ display:flex; align-items:center; gap:8px; margin-top:5px; flex-wrap:wrap; min-height:20px; }
+  .profile-hero-reading{ font-size:12px; opacity:.88; }
+  .profile-hero-role{ font-size:11px; font-weight:700; padding:2px 10px; border-radius:999px; background:rgba(255,255,255,.24); }
   .profile-rows{ display:flex; flex-direction:column; gap:12px; }
   .profile-row{ padding-top:12px; border-top:1px solid var(--line); }
   .profile-row:first-child{ padding-top:0; border-top:none; }
   .profile-label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); letter-spacing:.02em; margin-bottom:4px; }
   .profile-value{ font-size:13.5px; color:var(--ink); white-space:pre-wrap; line-height:1.7; }
+  .profile-section-label{ font-size:13px; font-weight:800; color:var(--ink); margin:22px 0 12px; padding-top:16px; border-top:1px solid var(--line); }
   .modal-foot{ display:flex; justify-content:flex-end; gap:8px; flex:none; padding:16px 32px 28px; border-top:1px solid var(--line); }
   .multiselect-box{ display:flex; flex-wrap:wrap; gap:6px; border:none; border-radius:var(--radius-sm); padding:8px; max-height:130px; overflow-y:auto; background:var(--surface-2); box-shadow:none; }
   .ms-chip{ font-size:12px; padding:4px 10px; border-radius:999px; border:none; background:var(--bg); font-weight:700; color:var(--ink-soft); box-shadow:var(--shadow-inset-sm), var(--ring); cursor:pointer; }
@@ -866,6 +892,41 @@ function contrastColor(hex){
     return ((r*299+g*587+b*114)/1000) > 150 ? '#2A2145' : '#FFFFFF';
   }catch(e){ return '#FFFFFF'; }
 }
+function hexToRgba(hex, alpha){
+  try{
+    const c = hex.replace('#','');
+    const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }catch(e){ return `rgba(108,76,240,${alpha})`; }
+}
+function resizeImageFile(file, maxW, maxH, maxBytes){
+  return new Promise((resolve)=>{
+    const reader = new FileReader();
+    reader.onerror = ()=> resolve(null);
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onerror = ()=> resolve(null);
+      img.onload = ()=>{
+        const scale = Math.min(1, maxW/img.naturalWidth, maxH/img.naturalHeight);
+        const w = Math.max(1, Math.round(img.naturalWidth*scale)), h = Math.max(1, Math.round(img.naturalHeight*scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        let quality = 0.88, dataUrl = canvas.toDataURL('image/jpeg', quality);
+        let attempts = 0;
+        while (dataUrl.length > maxBytes*1.37 && attempts < 6){
+          quality = Math.max(0.35, quality-0.15);
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+          attempts++;
+        }
+        resolve(dataUrl);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 function openImageCropper(file){
   return new Promise((resolve)=>{
     const reader = new FileReader();
@@ -930,7 +991,7 @@ function openImageCropper(file){
 
         const zoomRow = el('div', {style:'display:flex; align-items:center; gap:10px; margin-top:14px;'});
         zoomRow.appendChild(el('span', {style:'font-size:12px; color:var(--ink-soft); flex:none;'}, ['拡大']));
-        const zoomInput = el('input', {type:'range', min:'1', max:'3', step:'0.01'});
+        const zoomInput = el('input', {type:'range', class:'zoom-range', min:'1', max:'3', step:'0.01'});
         zoomInput.value = '1';
         zoomInput.addEventListener('input', ()=>{ zoom = parseFloat(zoomInput.value); clampOffset(); applyTransform(); });
         zoomRow.appendChild(zoomInput);
@@ -1068,8 +1129,8 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
         try{
-          const cropped = await openImageCropper(file);
-          if (cropped){ currentVal = cropped; renderPreview(); }
+          const result = f.crop===false ? await resizeImageFile(file, 640, 900, 200000) : await openImageCropper(file);
+          if (result){ currentVal = result; renderPreview(); }
         }
         catch(e){ toast('画像の読み込みに失敗しました'); }
         finally { fileInput.value = ''; }
@@ -1460,7 +1521,8 @@ function buildCharacterGallery(list){
   list.forEach((c,i)=>{
     const color = c.color || '#6C4CF0';
     const tile = el('div', {class:'gallery-tile fade-in', style:`--gc:${color}; animation-delay:${i*30}ms`, onclick:()=>openCharacterProfile(c)});
-    if (c.image) tile.appendChild(el('img', {src:c.image}));
+    if (c.standingImage) tile.appendChild(el('img', {src:c.standingImage, style:'object-fit:contain; background:'+hexToRgba(color,0.18)}));
+    else if (c.image) tile.appendChild(el('img', {src:c.image}));
     else tile.appendChild(el('div', {class:'gt-noimg', style:`background:${color}; color:${contrastColor(color)}`}, [(c.name||'?').charAt(0)]));
     tile.appendChild(el('div', {class:'gt-label'}, [
       el('div', {class:'gt-name'}, [c.name || '(名前未設定)'])
@@ -1549,7 +1611,8 @@ function openCharacterForm(existing){
     initial,
     wide: true,
     fields: [
-      {key:'image', label:'画像（任意）', type:'image', hint:'アップロードすると自動で縮小されます。設定しない場合はイメージカラーで表示されます'},
+      {key:'image', label:'アイコン画像（任意）', type:'image', hint:'アップロードすると自動で縮小されます。設定しない場合はイメージカラーで表示されます'},
+      {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, hint:'プロフィール画面の上部に大きく表示されます。全身イラストなど縦長の画像がおすすめです'},
       {section:'名前'},
       {type:'pair', label:'氏名', fields:[
         {key:'surname', placeholder:'例: 山田'},
@@ -1629,16 +1692,23 @@ function openCharacterProfile(c){
   const scrollHost = el('div', {class:'modal-scroll'});
 
   const color = c.color || '#6C4CF0';
-  const head = el('div', {class:'profile-head'});
-  if (c.image) head.appendChild(el('img', {class:'profile-avatar-img', src:c.image, style:`--cc:${color}`}));
-  else head.appendChild(el('div', {class:'profile-avatar', style:`background:${color}; color:${contrastColor(color)}`}, [(c.name||'?').charAt(0)]));
-  const headText = el('div', {}, [
-    el('h3', {style:'margin-bottom:2px;'}, [c.name || '(名前未設定)']),
-    charReading(c) ? el('div', {class:'ch-reading'}, [charReading(c)]) : null,
-    c.role ? el('div', {class:'ch-role', style:'margin-top:6px;'}, [c.role]) : null
-  ]);
-  head.appendChild(headText);
-  scrollHost.appendChild(head);
+  const hero = el('div', {class:'profile-hero', style:`background:linear-gradient(180deg, ${hexToRgba(color,0.32)}, var(--bg) 88%);`});
+  if (c.standingImage){
+    hero.appendChild(el('img', {class:'profile-hero-img', src:c.standingImage, alt:''}));
+  } else if (c.image){
+    hero.appendChild(el('img', {class:'profile-hero-icon', src:c.image, alt:''}));
+  } else {
+    hero.appendChild(el('div', {class:'profile-hero-icon profile-hero-icon-fallback', style:`background:${color}; color:${contrastColor(color)}`}, [(c.name||'?').charAt(0)]));
+  }
+  hero.appendChild(el('div', {class:'profile-hero-scrim'}));
+  hero.appendChild(el('div', {class:'profile-hero-text'}, [
+    el('div', {class:'profile-hero-name'}, [c.name || '(名前未設定)']),
+    el('div', {class:'profile-hero-meta'}, [
+      charReading(c) ? el('span', {class:'profile-hero-reading'}, [charReading(c)]) : null,
+      c.role ? el('span', {class:'profile-hero-role'}, [c.role]) : null
+    ])
+  ]));
+  scrollHost.appendChild(hero);
 
   const rows = el('div', {class:'profile-rows'});
   function row(label, value){
@@ -1665,6 +1735,13 @@ function openCharacterProfile(c){
   row('背景・経歴', c.background);
   row('メモ', c.notes);
   scrollHost.appendChild(rows);
+
+  const charEvents = State.data.timeline.filter(t=> t.charIds && t.charIds.includes(c.id)).sort((a,b)=>(a.order??0)-(b.order??0));
+  if (charEvents.length){
+    scrollHost.appendChild(el('div', {class:'profile-section-label'}, ['この人物の年表']));
+    scrollHost.appendChild(buildTimelineList(charEvents));
+  }
+
   if (c.updatedBy) scrollHost.appendChild(el('div', {class:'updated-by', style:'margin-top:12px;'}, [`最終更新: ${c.updatedBy}`]));
 
   const foot = el('div', {class:'modal-foot'});
@@ -1902,22 +1979,12 @@ function openRelationshipForm(existing){
 }
 
 /* ============================= TIMELINE ============================= */
-function renderTimeline(){
-  const view = document.getElementById('view-timeline');
-  view.innerHTML = '';
-  view.appendChild(el('div', {class:'content-head'}, [
-    el('div', {}, [ el('h2', {}, ['年表']), el('div', {class:'sub'}, [`${State.data.timeline.length} 件の出来事（並び順で表示）`]) ]),
-    el('button', {class:'btn btn-primary', onclick:()=>openTimelineForm(null)}, ['＋ 出来事を追加'])
-  ]));
-  if (!State.data.timeline.length){
-    view.appendChild(el('div', {class:'empty-state'}, ['まだ出来事が登録されていません。']));
-    return;
-  }
-  view.appendChild(el('div', {class:'hint', style:'margin:-6px 0 10px;'}, ['カードをつかんでドラッグすると順番を変更できます']));
-  const sorted = [...State.data.timeline].sort((a,b)=>(a.order??0)-(b.order??0));
+let timelineViewMode = 'world';
+let timelineTableFilter = 'all';
+function buildTimelineList(events){
   const tl = el('div', {class:'timeline'});
-  sorted.forEach((t,i)=>{
-    const item = el('div', {class:'tl-item fade-in'+(t.isFlashback?' flash':''), style:`animation-delay:${i*30}ms`});
+  events.forEach(t=>{
+    const item = el('div', {class:'tl-item'+(t.isFlashback?' flash':'')});
     const card = el('div', {class:'tl-card'});
     card.appendChild(el('div', {class:'tl-date'}, [(t.dateLabel||'（時期未設定）') + (t.isFlashback?'　回想シーン':'')]));
     card.appendChild(el('div', {class:'tl-title'}, [t.title || '(無題の出来事)']));
@@ -1931,16 +1998,121 @@ function renderTimeline(){
     item.appendChild(card);
     tl.appendChild(item);
   });
-  view.appendChild(tl);
-  makeDraggableList(tl, sorted, 'timeline');
+  return tl;
 }
-function openTimelineForm(existing){
+function isWorldEvent(t){ return !t.charIds || !t.charIds.length; }
+function buildTimelineWorld(){
+  const outer = el('div', {});
+  const worldEvents = [...State.data.timeline].filter(isWorldEvent).sort((a,b)=>(a.order??0)-(b.order??0));
+  if (!worldEvents.length){
+    outer.appendChild(el('div', {class:'empty-state'}, ['世界観全体の出来事（関連キャラクター未設定の出来事）はまだありません。']));
+    return outer;
+  }
+  outer.appendChild(el('div', {class:'hint', style:'margin:-6px 0 10px;'}, ['カードをつかんでドラッグすると順番を変更できます']));
+  const tl = buildTimelineList(worldEvents);
+  outer.appendChild(tl);
+  makeDraggableList(tl, worldEvents, 'timeline');
+  return outer;
+}
+function buildTimelineByCharacter(){
+  const outer = el('div', {});
+  const orderedChars = [...State.data.characters].sort((a,b)=>(a.order??0)-(b.order??0));
+  let any = false;
+  orderedChars.forEach(c=>{
+    const events = State.data.timeline.filter(t=> t.charIds && t.charIds.includes(c.id)).sort((a,b)=>(a.order??0)-(b.order??0));
+    if (!events.length) return;
+    any = true;
+    const section = el('div', {class:'tl-char-section'});
+    section.appendChild(el('div', {class:'tl-char-head'}, [
+      el('span', {class:'tl-char-dot', style:`background:${c.color||'#6C4CF0'}`}),
+      el('span', {}, [charFullName(c)]),
+      el('button', {class:'btn btn-sm', style:'margin-left:auto;', onclick:()=>openTimelineForm(null, c.id)}, ['＋ このキャラの出来事を追加'])
+    ]));
+    const tl = buildTimelineList(events);
+    section.appendChild(tl);
+    makeDraggableList(tl, events, 'timeline');
+    outer.appendChild(section);
+  });
+  if (!any) outer.appendChild(el('div', {class:'empty-state'}, ['キャラクターに紐づく出来事はまだありません。出来事の編集画面で「関連キャラクター」を設定してください。']));
+  return outer;
+}
+function buildTimelineTable(){
+  const outer = el('div', {});
+  const toolbar = el('div', {class:'toolbar'});
+  const filterSelect = el('select', {style:'width:auto;'});
+  const filterOpts = [['all','すべて'], ['world','世界観全体']].concat(
+    [...State.data.characters].sort((a,b)=>(a.order??0)-(b.order??0)).map(c=>[c.id, charFullName(c)])
+  );
+  filterOpts.forEach(([value,label])=>{
+    const opt = el('option', {value}, [label]);
+    if (value===timelineTableFilter) opt.setAttribute('selected','selected');
+    filterSelect.appendChild(opt);
+  });
+  filterSelect.addEventListener('change', ()=>{ timelineTableFilter = filterSelect.value; renderTimeline(); });
+  toolbar.appendChild(filterSelect);
+  outer.appendChild(toolbar);
+
+  let rows = [...State.data.timeline].sort((a,b)=>(a.order??0)-(b.order??0));
+  if (timelineTableFilter === 'world') rows = rows.filter(isWorldEvent);
+  else if (timelineTableFilter !== 'all') rows = rows.filter(t=> t.charIds && t.charIds.includes(timelineTableFilter));
+
+  if (!rows.length){
+    outer.appendChild(el('div', {class:'empty-state'}, ['該当する出来事がありません。']));
+    return outer;
+  }
+  const tableWrap = el('div', {class:'nickname-table-wrap'});
+  const table = el('table', {class:'nickname-table'});
+  const thead = el('thead', {});
+  thead.appendChild(el('tr', {}, [
+    el('th', {}, ['時期']), el('th', {}, ['出来事']), el('th', {}, ['種別']), el('th', {}, ['関連キャラクター']), el('th', {}, [''])
+  ]));
+  table.appendChild(thead);
+  const tbody = el('tbody', {});
+  rows.forEach(t=>{
+    const tr = el('tr', {});
+    tr.appendChild(el('td', {}, [(t.dateLabel||'（時期未設定）') + (t.isFlashback?'（回想）':'')]));
+    tr.appendChild(el('td', {}, [t.title || '(無題の出来事)']));
+    const world = isWorldEvent(t);
+    tr.appendChild(el('td', {style:'text-align:center;'}, [world ? '世界' : 'キャラ']));
+    const charsTd = el('td', {});
+    if (!world) t.charIds.forEach(cid=>{ const c = charById(cid); if (c) charsTd.appendChild(el('span', {class:'char-chip', style:`background:${c.color||'#6C4CF0'}; margin:2px;`}, [c.name])); });
+    tr.appendChild(charsTd);
+    tr.appendChild(el('td', {}, [ el('button', {class:'btn btn-sm', onclick:()=>openTimelineForm(t)}, ['編集']) ]));
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  tableWrap.appendChild(table);
+  outer.appendChild(tableWrap);
+  return outer;
+}
+function renderTimeline(){
+  const view = document.getElementById('view-timeline');
+  view.innerHTML = '';
+  const toggle = buildViewToggle('timeline', [
+    {value:'world', label:'世界年表'}, {value:'character', label:'キャラ年表'}, {value:'table', label:'一覧表'}
+  ], timelineViewMode, (mode)=>{ timelineViewMode=mode; renderTimeline(); });
+  view.appendChild(el('div', {class:'content-head'}, [
+    el('div', {}, [ el('h2', {}, ['年表']), el('div', {class:'sub'}, [`${State.data.timeline.length} 件の出来事`]) ]),
+    el('div', {style:'display:flex; align-items:center; gap:10px;'}, [
+      toggle,
+      el('button', {class:'btn btn-primary', onclick:()=>openTimelineForm(null)}, ['＋ 出来事を追加'])
+    ])
+  ]));
+  if (!State.data.timeline.length){
+    view.appendChild(el('div', {class:'empty-state'}, ['まだ出来事が登録されていません。']));
+    return;
+  }
+  if (timelineViewMode === 'table'){ view.appendChild(buildTimelineTable()); return; }
+  if (timelineViewMode === 'character'){ view.appendChild(buildTimelineByCharacter()); return; }
+  view.appendChild(buildTimelineWorld());
+}
+function openTimelineForm(existing, presetCharId){
   const charOpts = State.data.characters.map(c=>({value:c.id, label:c.name||'(無名)'}));
   openForm({
     title: existing ? '出来事を編集' : '新しい出来事',
     submitLabel: existing ? '保存する' : '追加する',
     celebrate: !existing,
-    initial: existing || { order: (State.data.timeline.length ? Math.max(...State.data.timeline.map(t=>t.order||0))+10 : 10) },
+    initial: existing || { order: (State.data.timeline.length ? Math.max(...State.data.timeline.map(t=>t.order||0))+10 : 10), charIds: presetCharId ? [presetCharId] : [] },
     fields: [
       {key:'dateLabel', label:'時期（自由記述）', type:'text', placeholder:'例: 1020年 春 / 第3章 冒頭'},
       {key:'order', label:'並び順（小さいほど先）', type:'number'},
