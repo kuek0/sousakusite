@@ -5,14 +5,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
 <style>
   :root{
-    --bg:#F8F8F7;
-    --surface:#F8F8F7;
-    --surface-2:#EBEBEA;
+    --bg:#FBFBFA;
+    --surface:#FBFBFA;
+    --surface-2:#EFEFEE;
     --ink:#262625;
     --ink-soft:#77756F;
     --ink-faint:#AAA8A2;
-    --line:#EBEBEA;
-    --line-strong:#D6D5D2;
+    --line:#EFEFEE;
+    --line-strong:#DAD9D6;
     --accent:#242322;
     --accent-deep:#191918;
     --accent-ink:#FFFFFF;
@@ -376,10 +376,11 @@
   .profile-modal{ max-width:900px; }
   .profile-body{ display:flex; flex:1 1 auto; min-height:0; height:min(560px, 78vh); }
   .profile-art{
-    width:320px; flex:none; position:relative; overflow:hidden;
+    width:320px; flex:none; position:relative; overflow:hidden; background:var(--bg);
     border-radius:var(--radius-lg) 0 0 var(--radius-lg); display:flex; align-items:center; justify-content:center;
   }
-  .profile-art-img{ width:100%; height:100%; object-fit:contain; }
+  .profile-art-accent{ position:absolute; width:210px; height:210px; border-radius:50%; top:16%; left:50%; transform:translateX(-50%); }
+  .profile-art-img{ position:relative; width:100%; height:100%; object-fit:contain; }
   .profile-art-icon{ width:150px; height:150px; border-radius:50%; object-fit:cover; box-shadow:0 0 0 6px var(--bg), var(--shadow); }
   .profile-art-icon-fallback{ display:flex; align-items:center; justify-content:center; font-weight:800; font-size:56px; }
   .profile-info{
@@ -1700,8 +1701,9 @@ function openCharacterProfile(c){
   const body = el('div', {class:'profile-body'});
 
   const color = c.color || '#6C4CF0';
-  const art = el('div', {class:'profile-art', style:`background:radial-gradient(ellipse 70% 60% at 50% 38%, ${hexToRgba(color,0.28)}, transparent 72%), #FFFFFF; box-shadow:inset 0 0 0 1px var(--line);`});
+  const art = el('div', {class:'profile-art'});
   if (c.standingImage){
+    art.appendChild(el('div', {class:'profile-art-accent', style:`background:${color};`}));
     art.appendChild(el('img', {class:'profile-art-img', src:c.standingImage, alt:''}));
   } else if (c.image){
     art.appendChild(el('img', {class:'profile-art-icon', src:c.image, alt:''}));
