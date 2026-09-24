@@ -124,6 +124,18 @@
   .image-field-controls{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
   .image-field-controls input[type=file]{ font-size:12px; padding:0; border:none; }
   .image-field-controls .btn{ padding:4px 10px; font-size:11px; }
+  .image-list-grid{ display:flex; flex-wrap:wrap; gap:10px; }
+  .image-list-item{ position:relative; width:72px; height:72px; border-radius:16px; overflow:hidden; background:var(--surface-2); box-shadow:var(--shadow-inset-sm); flex:none; }
+  .image-list-item img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .image-list-remove{
+    position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%; border:none;
+    background:rgba(20,16,24,.65); color:#fff; font-size:12px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .image-list-add{
+    width:72px; height:72px; border-radius:16px; flex:none; display:flex; align-items:center; justify-content:center;
+    font-size:22px; font-weight:700; color:var(--ink-faint); background:var(--surface-2); box-shadow:var(--shadow-inset-sm); cursor:pointer;
+  }
+  .image-list-add:hover{ color:var(--accent-deep); box-shadow:var(--shadow-inset-sm), var(--ring-hover); }
 
   /* App shell */
   #app{ min-height:100vh; display:flex; }
@@ -379,10 +391,26 @@
     width:320px; flex:none; position:relative; overflow:hidden; background:var(--bg);
     border-radius:var(--radius-lg) 0 0 var(--radius-lg); display:flex; align-items:center; justify-content:center;
   }
-  .profile-art-accent{ position:absolute; width:210px; height:210px; border-radius:50%; top:16%; left:50%; transform:translateX(-50%); }
+  .profile-art-accent{ position:absolute; left:0; top:0; bottom:0; width:5px; }
   .profile-art-img{ position:relative; width:100%; height:100%; object-fit:contain; }
   .profile-art-icon{ width:150px; height:150px; border-radius:50%; object-fit:cover; box-shadow:0 0 0 6px var(--bg), var(--shadow); }
   .profile-art-icon-fallback{ display:flex; align-items:center; justify-content:center; font-weight:800; font-size:56px; }
+  .profile-art-refbtn{
+    position:absolute; left:10px; bottom:10px; z-index:2; border:none; cursor:pointer;
+    font-size:11px; font-weight:700; padding:5px 12px; border-radius:999px; font-family:var(--font-body);
+    background:rgba(255,255,255,.88); color:var(--ink); box-shadow:var(--shadow-sm);
+  }
+  .profile-art-refbtn:hover{ background:#fff; }
+  .profile-expr-rail{
+    width:64px; flex:none; display:flex; flex-direction:column; gap:8px; padding:14px 8px;
+    overflow-y:auto; background:var(--surface-2);
+  }
+  .profile-expr-thumb{ width:48px; height:48px; border-radius:12px; overflow:hidden; cursor:pointer; box-shadow:var(--ring); flex:none; }
+  .profile-expr-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .profile-expr-thumb:hover{ box-shadow:var(--ring-hover); }
+  .profile-expr-thumb.active{ box-shadow:0 0 0 2px var(--accent-deep); }
+  .ref-gallery-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+  .ref-gallery-img{ width:100%; border-radius:var(--radius-sm); box-shadow:var(--shadow-sm); display:block; }
   .profile-info{
     flex:1 1 auto; min-width:0; overflow-y:auto; padding:32px;
     scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent;
@@ -403,6 +431,8 @@
   @media (max-width:700px){
     .profile-body{ flex-direction:column; height:auto; max-height:78vh; }
     .profile-art{ width:100%; height:240px; border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+    .profile-art-accent{ left:0; right:0; bottom:auto; top:0; width:auto; height:5px; }
+    .profile-expr-rail{ width:100%; flex-direction:row; overflow-x:auto; overflow-y:visible; }
   }
   .modal-foot{ display:flex; justify-content:flex-end; gap:8px; flex:none; padding:16px 32px 28px; border-top:1px solid var(--line); }
   .multiselect-box{ display:flex; flex-wrap:wrap; gap:6px; border:none; border-radius:var(--radius-sm); padding:8px; max-height:130px; overflow-y:auto; background:var(--surface-2); box-shadow:none; }
@@ -1152,6 +1182,39 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
       fieldRefs[f.key] = { get value(){ return currentVal; } };
       fieldsHost.appendChild(wrap);
       return;
+    } else if (f.type==='imageList'){
+      let currentList = Array.isArray(initial[f.key]) ? [...initial[f.key]] : [];
+      const grid = el('div', {class:'image-list-grid'});
+      function renderList(){
+        grid.innerHTML = '';
+        currentList.forEach((img, idx)=>{
+          const item = el('div', {class:'image-list-item'});
+          item.appendChild(el('img', {src:img}));
+          item.appendChild(el('button', {type:'button', class:'image-list-remove', onclick:()=>{ currentList.splice(idx,1); renderList(); }}, ['×']));
+          grid.appendChild(item);
+        });
+        const addLabel = el('label', {class:'image-list-add'}, ['＋']);
+        const addInput = el('input', {type:'file', accept:'image/*', multiple:true, style:'display:none;'});
+        addInput.addEventListener('change', async ()=>{
+          const files = Array.from(addInput.files || []);
+          for (const file of files){
+            try{
+              const result = await resizeImageFile(file, f.maxW||700, f.maxH||900, f.maxBytes||300000);
+              if (result) currentList.push(result);
+            }catch(e){ toast('画像の読み込みに失敗しました'); }
+          }
+          addInput.value = '';
+          renderList();
+        });
+        addLabel.appendChild(addInput);
+        grid.appendChild(addLabel);
+      }
+      renderList();
+      wrap.appendChild(grid);
+      if (f.hint) wrap.appendChild(el('div', {class:'hint'}, [f.hint]));
+      fieldRefs[f.key] = { get value(){ return currentList; } };
+      fieldsHost.appendChild(wrap);
+      return;
     } else if (f.type==='color'){
       const rowWrap = el('div', {class:'color-row'});
       const colorInput = el('input', {type:'color', style:'display:none;'});
@@ -1622,6 +1685,8 @@ function openCharacterForm(existing){
     fields: [
       {key:'image', label:'アイコン画像（任意）', type:'image', hint:'アップロードすると自動で縮小されます。設定しない場合はイメージカラーで表示されます'},
       {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, maxW:760, maxH:1080, maxBytes:500000, hint:'プロフィール画面に大きく表示されます。透過PNGの全身イラストがおすすめです（背景は透過されたまま表示されます）'},
+      {key:'expressions', label:'表情差分（任意・複数可）', type:'imageList', maxW:500, maxH:500, maxBytes:220000, hint:'顔だけの差分画像など。プロフィール画面で立ち絵の横に並びます（登録がなければ何も表示されません）'},
+      {key:'refGallery', label:'参考画像（任意・複数可）', type:'imageList', maxW:1000, maxH:1000, maxBytes:350000, hint:'三面図など好きな画像をまとめられます。プロフィール画面ではボタンを押したときだけ表示されます'},
       {section:'名前'},
       {type:'pair', label:'氏名', fields:[
         {key:'surname', placeholder:'例: 山田'},
@@ -1702,19 +1767,40 @@ function openCharacterProfile(c){
 
   const color = c.color || '#6C4CF0';
   const art = el('div', {class:'profile-art'});
+  let artImgEl = null;
   if (c.standingImage){
     art.appendChild(el('div', {class:'profile-art-accent', style:`background:${color};`}));
-    art.appendChild(el('img', {class:'profile-art-img', src:c.standingImage, alt:''}));
+    artImgEl = el('img', {class:'profile-art-img', src:c.standingImage, alt:''});
+    art.appendChild(artImgEl);
   } else if (c.image){
     art.appendChild(el('img', {class:'profile-art-icon', src:c.image, alt:''}));
   } else {
     art.appendChild(el('div', {class:'profile-art-icon profile-art-icon-fallback', style:`background:${color}; color:${contrastColor(color)}`}, [(c.name||'?').charAt(0)]));
   }
+  const refGallery = Array.isArray(c.refGallery) ? c.refGallery : [];
+  if (refGallery.length){
+    art.appendChild(el('button', {type:'button', class:'profile-art-refbtn', onclick:()=>openRefGallery(refGallery, charFullName(c) || c.name)}, [`参考画像 (${refGallery.length})`]));
+  }
   body.appendChild(art);
+
+  const exprList = Array.isArray(c.expressions) ? c.expressions : [];
+  if (c.standingImage && exprList.length){
+    const rail = el('div', {class:'profile-expr-rail'});
+    exprList.forEach(img=>{
+      const thumb = el('div', {class:'profile-expr-thumb'}, [ el('img', {src:img, alt:''}) ]);
+      thumb.addEventListener('click', ()=>{
+        rail.querySelectorAll('.profile-expr-thumb').forEach(t=>t.classList.remove('active'));
+        thumb.classList.add('active');
+        if (artImgEl) artImgEl.src = img;
+      });
+      rail.appendChild(thumb);
+    });
+    body.appendChild(rail);
+  }
 
   const info = el('div', {class:'profile-info'});
   info.appendChild(el('div', {class:'profile-info-head'}, [
-    el('h3', {class:'profile-info-name'}, [c.name || '(名前未設定)']),
+    el('h3', {class:'profile-info-name'}, [charFullName(c) || c.name || '(名前未設定)']),
     el('div', {class:'profile-info-meta'}, [
       charReading(c) ? el('span', {class:'ch-reading'}, [charReading(c)]) : null,
       c.role ? el('span', {class:'ch-role'}, [c.role]) : null
@@ -1729,9 +1815,6 @@ function openCharacterProfile(c){
       el('div', {class:'profile-value'}, [value])
     ]));
   }
-  row('苗字', c.surname);
-  row('名前', c.givenName);
-  row('ミドルネーム', c.middleName);
   row('所属', c.affiliation);
   const by = charBirthYear(c), dy = charDeathYear(c), ageVal = charAge(c);
   if (by!=null || dy!=null){
@@ -1764,6 +1847,22 @@ function openCharacterProfile(c){
 
   back.appendChild(modal);
   root.appendChild(back);
+}
+function openRefGallery(images, title){
+  const back = el('div', {class:'modal-back', style:'z-index:170;', onclick:(e)=>{ if(e.target===back) cleanup(); }});
+  const box = el('div', {class:'modal', style:'max-width:680px;'});
+  const scrollHost = el('div', {class:'modal-scroll'});
+  scrollHost.appendChild(el('h3', {}, [title ? `${title}の参考画像` : '参考画像']));
+  const grid = el('div', {class:'ref-gallery-grid'});
+  images.forEach(src=> grid.appendChild(el('img', {class:'ref-gallery-img', src, alt:''})));
+  scrollHost.appendChild(grid);
+  function cleanup(){ back.remove(); }
+  const foot = el('div', {class:'modal-foot'});
+  foot.appendChild(el('button', {class:'btn btn-primary', onclick:cleanup}, ['閉じる']));
+  box.appendChild(scrollHost);
+  box.appendChild(foot);
+  back.appendChild(box);
+  document.body.appendChild(back);
 }
 
 /* ============================= RELATIONSHIPS ============================= */
