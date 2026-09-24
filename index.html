@@ -412,14 +412,6 @@
     background:rgba(255,255,255,.88); color:var(--ink); box-shadow:var(--shadow-sm);
   }
   .profile-art-refbtn:hover{ background:#fff; }
-  .profile-expr-strip{
-    flex:none; display:flex; gap:8px; padding:10px 12px; overflow-x:auto;
-    background:var(--surface-2); border-top:1px solid var(--line);
-  }
-  .profile-expr-thumb{ width:var(--expr-size, 56px); height:var(--expr-size, 56px); border-radius:12px; overflow:hidden; cursor:pointer; box-shadow:var(--ring); flex:none; }
-  .profile-expr-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .profile-expr-thumb:hover{ box-shadow:var(--ring-hover); }
-  .profile-expr-thumb.active{ box-shadow:0 0 0 2px var(--accent-deep); }
   .ref-gallery-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
   .ref-gallery-img{ width:100%; border-radius:var(--radius-sm); box-shadow:var(--shadow-sm); display:block; cursor:zoom-in; transition:transform .12s ease; }
   .ref-gallery-img:hover{ transform:scale(1.02); }
@@ -1722,7 +1714,6 @@ function openCharacterForm(existing){
     fields: [
       {key:'image', label:'アイコン画像（任意）', type:'image', hint:'アップロードすると自動で縮小されます。設定しない場合はイメージカラーで表示されます'},
       {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, maxW:640, maxH:900, maxBytes:280000, hint:'プロフィール画面に大きく表示されます。透過PNGの全身イラストがおすすめです（背景は透過されたまま表示されます）。画像は他の画像欄と容量を共有するので、下の「画像合計」の表示を目安にしてください'},
-      {key:'expressions', label:'表情差分（任意・複数可）', type:'imageList', hint:'アイコン画像と同じように、範囲を選んで切り抜けます。プロフィール画面で立ち絵の下に並びます（登録がなければ何も表示されません）'},
       {key:'refGallery', label:'設定資料（任意・複数可）', type:'imageList', maxW:900, maxH:900, maxBytes:200000, hint:'三面図など好きな画像をまとめられます。プロフィール画面ではボタンを押したときだけ表示されます'},
       {section:'名前'},
       {type:'pair', label:'氏名', fields:[
@@ -1805,11 +1796,9 @@ function openCharacterProfile(c){
   const color = c.color || '#6C4CF0';
   const art = el('div', {class:'profile-art'});
   const stage = el('div', {class:'profile-art-stage'});
-  let artImgEl = null;
   if (c.standingImage){
     stage.appendChild(el('div', {class:'profile-art-accent', style:`background:${color};`}));
-    artImgEl = el('img', {class:'profile-art-img', src:c.standingImage, alt:''});
-    stage.appendChild(artImgEl);
+    stage.appendChild(el('img', {class:'profile-art-img', src:c.standingImage, alt:''}));
   } else if (c.image){
     stage.appendChild(el('img', {class:'profile-art-icon', src:c.image, alt:''}));
   } else {
@@ -1820,23 +1809,6 @@ function openCharacterProfile(c){
     stage.appendChild(el('button', {type:'button', class:'profile-art-refbtn', onclick:()=>openRefGallery(refGallery, charFullName(c) || c.name)}, [`設定資料 (${refGallery.length})`]));
   }
   art.appendChild(stage);
-
-  const exprList = Array.isArray(c.expressions) ? c.expressions : [];
-  if (c.standingImage && exprList.length){
-    const strip = el('div', {class:'profile-expr-strip'});
-    function addThumb(img, isDefault){
-      const thumb = el('div', {class:'profile-expr-thumb'+(isDefault?' active':'')}, [ el('img', {src:img, alt:''}) ]);
-      thumb.addEventListener('click', ()=>{
-        strip.querySelectorAll('.profile-expr-thumb').forEach(t=>t.classList.remove('active'));
-        thumb.classList.add('active');
-        if (artImgEl) artImgEl.src = img;
-      });
-      strip.appendChild(thumb);
-    }
-    addThumb(c.standingImage, true);
-    exprList.forEach(img=> addThumb(img, false));
-    art.appendChild(strip);
-  }
   body.appendChild(art);
 
   const info = el('div', {class:'profile-info'});
