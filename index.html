@@ -136,6 +136,16 @@
     font-size:22px; font-weight:700; color:var(--ink-faint); background:var(--surface-2); box-shadow:var(--shadow-inset-sm); cursor:pointer;
   }
   .image-list-add:hover{ color:var(--accent-deep); box-shadow:var(--shadow-inset-sm), var(--ring-hover); }
+  .image-size-caption{ font-size:10.5px; color:var(--ink-faint); font-family:monospace; }
+  .image-list-size{
+    position:absolute; left:0; right:0; bottom:0; padding:2px 4px; text-align:center;
+    font-size:9px; font-family:monospace; color:#fff; background:rgba(20,16,24,.6);
+  }
+  .image-total-meter{
+    font-size:11.5px; color:var(--ink-soft); background:var(--surface-2); border-radius:var(--radius-sm);
+    padding:8px 12px; margin-top:4px;
+  }
+  .image-total-meter.over{ color:#B3261E; background:#FBEAE9; font-weight:700; }
 
   /* App shell */
   #app{ min-height:100vh; display:flex; }
@@ -389,9 +399,10 @@
   .profile-body{ display:flex; flex:1 1 auto; min-height:0; height:min(560px, 78vh); }
   .profile-art{
     width:320px; flex:none; position:relative; overflow:hidden; background:var(--bg);
-    border-radius:var(--radius-lg) 0 0 var(--radius-lg); display:flex; align-items:center; justify-content:center;
+    border-radius:var(--radius-lg) 0 0 var(--radius-lg); display:flex; flex-direction:column;
   }
-  .profile-art-accent{ position:absolute; left:0; top:0; bottom:0; width:5px; }
+  .profile-art-stage{ position:relative; flex:1 1 auto; min-height:0; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .profile-art-accent{ position:absolute; left:14px; top:22px; bottom:22px; width:5px; border-radius:999px; }
   .profile-art-img{ position:relative; width:100%; height:100%; object-fit:contain; }
   .profile-art-icon{ width:150px; height:150px; border-radius:50%; object-fit:cover; box-shadow:0 0 0 6px var(--bg), var(--shadow); }
   .profile-art-icon-fallback{ display:flex; align-items:center; justify-content:center; font-weight:800; font-size:56px; }
@@ -401,11 +412,11 @@
     background:rgba(255,255,255,.88); color:var(--ink); box-shadow:var(--shadow-sm);
   }
   .profile-art-refbtn:hover{ background:#fff; }
-  .profile-expr-rail{
-    width:64px; flex:none; display:flex; flex-direction:column; gap:8px; padding:14px 8px;
-    overflow-y:auto; background:var(--surface-2);
+  .profile-expr-strip{
+    flex:none; display:flex; gap:8px; padding:10px 12px; overflow-x:auto;
+    background:var(--surface-2); border-top:1px solid var(--line);
   }
-  .profile-expr-thumb{ width:48px; height:48px; border-radius:12px; overflow:hidden; cursor:pointer; box-shadow:var(--ring); flex:none; }
+  .profile-expr-thumb{ width:var(--expr-size, 56px); height:var(--expr-size, 56px); border-radius:12px; overflow:hidden; cursor:pointer; box-shadow:var(--ring); flex:none; }
   .profile-expr-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
   .profile-expr-thumb:hover{ box-shadow:var(--ring-hover); }
   .profile-expr-thumb.active{ box-shadow:0 0 0 2px var(--accent-deep); }
@@ -430,9 +441,8 @@
   .profile-section-label{ font-size:13px; font-weight:800; color:var(--ink); margin:22px 0 12px; padding-top:16px; border-top:1px solid var(--line); }
   @media (max-width:700px){
     .profile-body{ flex-direction:column; height:auto; max-height:78vh; }
-    .profile-art{ width:100%; height:240px; border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
-    .profile-art-accent{ left:0; right:0; bottom:auto; top:0; width:auto; height:5px; }
-    .profile-expr-rail{ width:100%; flex-direction:row; overflow-x:auto; overflow-y:visible; }
+    .profile-art{ width:100%; height:290px; border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+    .profile-art-accent{ left:22px; right:22px; bottom:auto; top:14px; width:auto; height:5px; border-radius:999px; }
   }
   .modal-foot{ display:flex; justify-content:flex-end; gap:8px; flex:none; padding:16px 32px 28px; border-top:1px solid var(--line); }
   .multiselect-box{ display:flex; flex-wrap:wrap; gap:6px; border:none; border-radius:var(--radius-sm); padding:8px; max-height:130px; overflow-y:auto; background:var(--surface-2); box-shadow:none; }
@@ -933,6 +943,13 @@ function hexToRgba(hex, alpha){
     return `rgba(${r},${g},${b},${alpha})`;
   }catch(e){ return `rgba(108,76,240,${alpha})`; }
 }
+function b64Bytes(dataUrl){
+  if (!dataUrl) return 0;
+  const idx = dataUrl.indexOf(',');
+  const b64 = idx>=0 ? dataUrl.slice(idx+1) : dataUrl;
+  return Math.round(b64.length*0.75);
+}
+function formatBytes(n){ return n < 1024 ? `${n}B` : `${Math.round(n/1024)}KB`; }
 function resizeImageFile(file, maxW, maxH, maxBytes){
   return new Promise((resolve)=>{
     const reader = new FileReader();
@@ -1108,9 +1125,18 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
   const scrollHost = el('div', {class:'modal-scroll'});
   scrollHost.appendChild(el('h3', {}, [title]));
   const fieldsHost = wide ? el('div', {class:'form-grid'}) : scrollHost;
-  const FULL_WIDTH_TYPES = ['textarea','image','color','multiselect','pair'];
+  const FULL_WIDTH_TYPES = ['textarea','image','imageList','color','multiselect','pair'];
 
   const fieldRefs = {};
+  const imageSizeGetters = [];
+  const imageTotalEl = el('div', {class:'image-total-meter'});
+  const IMAGE_TOTAL_SAFE_BYTES = 850000;
+  function refreshImageTotal(){
+    const total = imageSizeGetters.reduce((sum,fn)=> sum + fn(), 0);
+    const over = total > IMAGE_TOTAL_SAFE_BYTES;
+    imageTotalEl.textContent = `画像合計 約${formatBytes(total)}（このキャラの保存データ全体の目安上限は約${formatBytes(IMAGE_TOTAL_SAFE_BYTES)}）` + (over ? ' — 超過すると保存に失敗する可能性があります' : '');
+    imageTotalEl.classList.toggle('over', over);
+  }
   fields.forEach(f=>{
     if (f.section){
       const heading = el('div', {class:'form-section-title'}, [f.section]);
@@ -1158,11 +1184,14 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
     } else if (f.type==='image'){
       let currentVal = initial[f.key] || '';
       const preview = el('div', {class:'image-preview'});
+      const sizeCaption = el('div', {class:'image-size-caption'});
       function renderPreview(){
         preview.innerHTML = '';
-        if (currentVal) preview.appendChild(el('img', {src:currentVal}));
-        else preview.appendChild(el('span', {class:'image-preview-empty'}, ['画像なし']));
+        if (currentVal){ preview.appendChild(el('img', {src:currentVal})); sizeCaption.textContent = formatBytes(b64Bytes(currentVal)); }
+        else { preview.appendChild(el('span', {class:'image-preview-empty'}, ['画像なし'])); sizeCaption.textContent = ''; }
+        refreshImageTotal();
       }
+      imageSizeGetters.push(()=> b64Bytes(currentVal));
       renderPreview();
       const fileInput = el('input', {type:'file', accept:'image/*'});
       fileInput.addEventListener('change', async ()=>{
@@ -1176,7 +1205,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
         finally { fileInput.value = ''; }
       });
       const clearBtn = el('button', {type:'button', class:'btn btn-sm', onclick:()=>{ currentVal=''; fileInput.value=''; renderPreview(); }}, ['画像を削除']);
-      const rowWrap = el('div', {class:'image-field-row'}, [preview, el('div', {class:'image-field-controls'}, [fileInput, clearBtn])]);
+      const rowWrap = el('div', {class:'image-field-row'}, [preview, el('div', {class:'image-field-controls'}, [fileInput, clearBtn, sizeCaption])]);
       wrap.appendChild(rowWrap);
       if (f.hint) wrap.appendChild(el('div', {class:'hint'}, [f.hint]));
       fieldRefs[f.key] = { get value(){ return currentVal; } };
@@ -1185,11 +1214,13 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
     } else if (f.type==='imageList'){
       let currentList = Array.isArray(initial[f.key]) ? [...initial[f.key]] : [];
       const grid = el('div', {class:'image-list-grid'});
+      imageSizeGetters.push(()=> currentList.reduce((sum,img)=> sum + b64Bytes(img), 0));
       function renderList(){
         grid.innerHTML = '';
         currentList.forEach((img, idx)=>{
           const item = el('div', {class:'image-list-item'});
           item.appendChild(el('img', {src:img}));
+          item.appendChild(el('div', {class:'image-list-size'}, [formatBytes(b64Bytes(img))]));
           item.appendChild(el('button', {type:'button', class:'image-list-remove', onclick:()=>{ currentList.splice(idx,1); renderList(); }}, ['×']));
           grid.appendChild(item);
         });
@@ -1208,6 +1239,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
         });
         addLabel.appendChild(addInput);
         grid.appendChild(addLabel);
+        refreshImageTotal();
       }
       renderList();
       wrap.appendChild(grid);
@@ -1282,6 +1314,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
     fieldsHost.appendChild(wrap);
   });
   if (wide) scrollHost.appendChild(fieldsHost);
+  if (imageSizeGetters.length){ refreshImageTotal(); scrollHost.appendChild(imageTotalEl); }
 
   if (onReady) onReady(fieldRefs, modal);
 
@@ -1684,9 +1717,10 @@ function openCharacterForm(existing){
     wide: true,
     fields: [
       {key:'image', label:'アイコン画像（任意）', type:'image', hint:'アップロードすると自動で縮小されます。設定しない場合はイメージカラーで表示されます'},
-      {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, maxW:760, maxH:1080, maxBytes:500000, hint:'プロフィール画面に大きく表示されます。透過PNGの全身イラストがおすすめです（背景は透過されたまま表示されます）'},
-      {key:'expressions', label:'表情差分（任意・複数可）', type:'imageList', maxW:500, maxH:500, maxBytes:220000, hint:'顔だけの差分画像など。プロフィール画面で立ち絵の横に並びます（登録がなければ何も表示されません）'},
-      {key:'refGallery', label:'参考画像（任意・複数可）', type:'imageList', maxW:1000, maxH:1000, maxBytes:350000, hint:'三面図など好きな画像をまとめられます。プロフィール画面ではボタンを押したときだけ表示されます'},
+      {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, maxW:640, maxH:900, maxBytes:280000, hint:'プロフィール画面に大きく表示されます。透過PNGの全身イラストがおすすめです（背景は透過されたまま表示されます）。画像は他の画像欄と容量を共有するので、下の「画像合計」の表示を目安にしてください'},
+      {key:'expressions', label:'表情差分（任意・複数可）', type:'imageList', maxW:320, maxH:320, maxBytes:60000, hint:'顔だけの差分画像など。プロフィール画面で立ち絵の下に並びます（登録がなければ何も表示されません）'},
+      {key:'exprSize', label:'表情差分の表示サイズ', type:'select', options:[{value:'s',label:'小'},{value:'m',label:'中'},{value:'l',label:'大'}], default:'m'},
+      {key:'refGallery', label:'設定資料（任意・複数可）', type:'imageList', maxW:900, maxH:900, maxBytes:200000, hint:'三面図など好きな画像をまとめられます。プロフィール画面ではボタンを押したときだけ表示されます'},
       {section:'名前'},
       {type:'pair', label:'氏名', fields:[
         {key:'surname', placeholder:'例: 山田'},
@@ -1767,36 +1801,39 @@ function openCharacterProfile(c){
 
   const color = c.color || '#6C4CF0';
   const art = el('div', {class:'profile-art'});
+  const stage = el('div', {class:'profile-art-stage'});
   let artImgEl = null;
   if (c.standingImage){
-    art.appendChild(el('div', {class:'profile-art-accent', style:`background:${color};`}));
+    stage.appendChild(el('div', {class:'profile-art-accent', style:`background:${color};`}));
     artImgEl = el('img', {class:'profile-art-img', src:c.standingImage, alt:''});
-    art.appendChild(artImgEl);
+    stage.appendChild(artImgEl);
   } else if (c.image){
-    art.appendChild(el('img', {class:'profile-art-icon', src:c.image, alt:''}));
+    stage.appendChild(el('img', {class:'profile-art-icon', src:c.image, alt:''}));
   } else {
-    art.appendChild(el('div', {class:'profile-art-icon profile-art-icon-fallback', style:`background:${color}; color:${contrastColor(color)}`}, [(c.name||'?').charAt(0)]));
+    stage.appendChild(el('div', {class:'profile-art-icon profile-art-icon-fallback', style:`background:${color}; color:${contrastColor(color)}`}, [(c.name||'?').charAt(0)]));
   }
   const refGallery = Array.isArray(c.refGallery) ? c.refGallery : [];
   if (refGallery.length){
-    art.appendChild(el('button', {type:'button', class:'profile-art-refbtn', onclick:()=>openRefGallery(refGallery, charFullName(c) || c.name)}, [`参考画像 (${refGallery.length})`]));
+    stage.appendChild(el('button', {type:'button', class:'profile-art-refbtn', onclick:()=>openRefGallery(refGallery, charFullName(c) || c.name)}, [`設定資料 (${refGallery.length})`]));
   }
-  body.appendChild(art);
+  art.appendChild(stage);
 
   const exprList = Array.isArray(c.expressions) ? c.expressions : [];
   if (c.standingImage && exprList.length){
-    const rail = el('div', {class:'profile-expr-rail'});
+    const exprPx = {s:40, m:56, l:76}[c.exprSize] || 56;
+    const strip = el('div', {class:'profile-expr-strip', style:`--expr-size:${exprPx}px;`});
     exprList.forEach(img=>{
       const thumb = el('div', {class:'profile-expr-thumb'}, [ el('img', {src:img, alt:''}) ]);
       thumb.addEventListener('click', ()=>{
-        rail.querySelectorAll('.profile-expr-thumb').forEach(t=>t.classList.remove('active'));
+        strip.querySelectorAll('.profile-expr-thumb').forEach(t=>t.classList.remove('active'));
         thumb.classList.add('active');
         if (artImgEl) artImgEl.src = img;
       });
-      rail.appendChild(thumb);
+      strip.appendChild(thumb);
     });
-    body.appendChild(rail);
+    art.appendChild(strip);
   }
+  body.appendChild(art);
 
   const info = el('div', {class:'profile-info'});
   info.appendChild(el('div', {class:'profile-info-head'}, [
@@ -1852,7 +1889,7 @@ function openRefGallery(images, title){
   const back = el('div', {class:'modal-back', style:'z-index:170;', onclick:(e)=>{ if(e.target===back) cleanup(); }});
   const box = el('div', {class:'modal', style:'max-width:680px;'});
   const scrollHost = el('div', {class:'modal-scroll'});
-  scrollHost.appendChild(el('h3', {}, [title ? `${title}の参考画像` : '参考画像']));
+  scrollHost.appendChild(el('h3', {}, [title ? `${title}の設定資料` : '設定資料']));
   const grid = el('div', {class:'ref-gallery-grid'});
   images.forEach(src=> grid.appendChild(el('img', {class:'ref-gallery-img', src, alt:''})));
   scrollHost.appendChild(grid);
