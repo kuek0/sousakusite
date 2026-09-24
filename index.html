@@ -373,29 +373,36 @@
     letter-spacing:.05em; padding-bottom:6px; margin:14px 0 4px; border-bottom:1px solid var(--line);
   }
   .form-section-title:first-child{ margin-top:0; }
-  .profile-modal{ max-width:640px; }
-  .profile-hero{
-    position:relative; margin:-32px -32px 20px; height:320px; overflow:hidden;
-    border-radius:var(--radius-lg) var(--radius-lg) 0 0; display:flex; align-items:flex-end; justify-content:center;
+  .profile-modal{ max-width:900px; }
+  .profile-body{ display:flex; flex:1 1 auto; min-height:0; height:min(560px, 78vh); }
+  .profile-art{
+    width:320px; flex:none; position:relative; overflow:hidden;
+    border-radius:var(--radius-lg) 0 0 var(--radius-lg); display:flex; align-items:center; justify-content:center;
   }
-  .profile-hero-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center bottom; }
-  .profile-hero-icon{
-    width:128px; height:128px; border-radius:50%; margin-bottom:56px; object-fit:cover; flex:none;
-    box-shadow:0 0 0 6px var(--bg), var(--shadow);
+  .profile-art-img{ width:100%; height:100%; object-fit:contain; }
+  .profile-art-icon{ width:150px; height:150px; border-radius:50%; object-fit:cover; box-shadow:0 0 0 6px var(--bg), var(--shadow); }
+  .profile-art-icon-fallback{ display:flex; align-items:center; justify-content:center; font-weight:800; font-size:56px; }
+  .profile-info{
+    flex:1 1 auto; min-width:0; overflow-y:auto; padding:32px;
+    scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent;
   }
-  .profile-hero-icon-fallback{ display:flex; align-items:center; justify-content:center; font-weight:800; font-size:50px; }
-  .profile-hero-scrim{ position:absolute; left:0; right:0; bottom:0; height:130px; background:linear-gradient(transparent, rgba(20,16,24,.62) 75%); pointer-events:none; }
-  .profile-hero-text{ position:absolute; left:24px; right:24px; bottom:16px; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.4); }
-  .profile-hero-name{ font-size:23px; font-weight:800; line-height:1.25; }
-  .profile-hero-meta{ display:flex; align-items:center; gap:8px; margin-top:5px; flex-wrap:wrap; min-height:20px; }
-  .profile-hero-reading{ font-size:12px; opacity:.88; }
-  .profile-hero-role{ font-size:11px; font-weight:700; padding:2px 10px; border-radius:999px; background:rgba(255,255,255,.24); }
+  .profile-info::-webkit-scrollbar{ width:8px; }
+  .profile-info::-webkit-scrollbar-track{ background:transparent; margin-block:10px; }
+  .profile-info::-webkit-scrollbar-thumb{ background-color:var(--line-strong); border-radius:999px; border:2px solid var(--bg); background-clip:padding-box; }
+  .profile-info::-webkit-scrollbar-thumb:hover{ background-color:var(--ink-faint); }
+  .profile-info-head{ margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+  .profile-info-name{ font-size:22px; font-weight:800; line-height:1.3; }
+  .profile-info-meta{ display:flex; align-items:center; gap:8px; margin-top:6px; flex-wrap:wrap; }
   .profile-rows{ display:flex; flex-direction:column; gap:12px; }
   .profile-row{ padding-top:12px; border-top:1px solid var(--line); }
   .profile-row:first-child{ padding-top:0; border-top:none; }
   .profile-label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); letter-spacing:.02em; margin-bottom:4px; }
   .profile-value{ font-size:13.5px; color:var(--ink); white-space:pre-wrap; line-height:1.7; }
   .profile-section-label{ font-size:13px; font-weight:800; color:var(--ink); margin:22px 0 12px; padding-top:16px; border-top:1px solid var(--line); }
+  @media (max-width:700px){
+    .profile-body{ flex-direction:column; height:auto; max-height:78vh; }
+    .profile-art{ width:100%; height:240px; border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+  }
   .modal-foot{ display:flex; justify-content:flex-end; gap:8px; flex:none; padding:16px 32px 28px; border-top:1px solid var(--line); }
   .multiselect-box{ display:flex; flex-wrap:wrap; gap:6px; border:none; border-radius:var(--radius-sm); padding:8px; max-height:130px; overflow-y:auto; background:var(--surface-2); box-shadow:none; }
   .ms-chip{ font-size:12px; padding:4px 10px; border-radius:999px; border:none; background:var(--bg); font-weight:700; color:var(--ink-soft); box-shadow:var(--shadow-inset-sm), var(--ring); cursor:pointer; }
@@ -1131,7 +1138,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
         const file = fileInput.files && fileInput.files[0];
         if (!file) return;
         try{
-          const result = f.crop===false ? await resizeImageFile(file, 640, 900, 200000) : await openImageCropper(file);
+          const result = f.crop===false ? await resizeImageFile(file, f.maxW||640, f.maxH||900, f.maxBytes||200000) : await openImageCropper(file);
           if (result){ currentVal = result; renderPreview(); }
         }
         catch(e){ toast('画像の読み込みに失敗しました'); }
@@ -1613,7 +1620,7 @@ function openCharacterForm(existing){
     wide: true,
     fields: [
       {key:'image', label:'アイコン画像（任意）', type:'image', hint:'アップロードすると自動で縮小されます。設定しない場合はイメージカラーで表示されます'},
-      {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, hint:'プロフィール画面の上部に大きく表示されます。全身イラストなど縦長の画像がおすすめです'},
+      {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, maxW:760, maxH:1080, maxBytes:500000, hint:'プロフィール画面に大きく表示されます。透過PNGの全身イラストがおすすめです（背景は透過されたまま表示されます）'},
       {section:'名前'},
       {type:'pair', label:'氏名', fields:[
         {key:'surname', placeholder:'例: 山田'},
@@ -1690,26 +1697,27 @@ function openCharacterProfile(c){
   lockBodyScroll();
   const back = el('div', {class:'modal-back', onclick:(e)=>{ if(e.target===back) closeModal(); }});
   const modal = el('div', {class:'modal profile-modal'});
-  const scrollHost = el('div', {class:'modal-scroll'});
+  const body = el('div', {class:'profile-body'});
 
   const color = c.color || '#6C4CF0';
-  const hero = el('div', {class:'profile-hero', style:`background:linear-gradient(180deg, ${hexToRgba(color,0.32)}, var(--bg) 88%);`});
+  const art = el('div', {class:'profile-art', style:`background:linear-gradient(180deg, ${hexToRgba(color,0.32)}, var(--bg) 88%);`});
   if (c.standingImage){
-    hero.appendChild(el('img', {class:'profile-hero-img', src:c.standingImage, alt:''}));
+    art.appendChild(el('img', {class:'profile-art-img', src:c.standingImage, alt:''}));
   } else if (c.image){
-    hero.appendChild(el('img', {class:'profile-hero-icon', src:c.image, alt:''}));
+    art.appendChild(el('img', {class:'profile-art-icon', src:c.image, alt:''}));
   } else {
-    hero.appendChild(el('div', {class:'profile-hero-icon profile-hero-icon-fallback', style:`background:${color}; color:${contrastColor(color)}`}, [(c.name||'?').charAt(0)]));
+    art.appendChild(el('div', {class:'profile-art-icon profile-art-icon-fallback', style:`background:${color}; color:${contrastColor(color)}`}, [(c.name||'?').charAt(0)]));
   }
-  hero.appendChild(el('div', {class:'profile-hero-scrim'}));
-  hero.appendChild(el('div', {class:'profile-hero-text'}, [
-    el('div', {class:'profile-hero-name'}, [c.name || '(名前未設定)']),
-    el('div', {class:'profile-hero-meta'}, [
-      charReading(c) ? el('span', {class:'profile-hero-reading'}, [charReading(c)]) : null,
-      c.role ? el('span', {class:'profile-hero-role'}, [c.role]) : null
+  body.appendChild(art);
+
+  const info = el('div', {class:'profile-info'});
+  info.appendChild(el('div', {class:'profile-info-head'}, [
+    el('h3', {class:'profile-info-name'}, [c.name || '(名前未設定)']),
+    el('div', {class:'profile-info-meta'}, [
+      charReading(c) ? el('span', {class:'ch-reading'}, [charReading(c)]) : null,
+      c.role ? el('span', {class:'ch-role'}, [c.role]) : null
     ])
   ]));
-  scrollHost.appendChild(hero);
 
   const rows = el('div', {class:'profile-rows'});
   function row(label, value){
@@ -1735,20 +1743,21 @@ function openCharacterProfile(c){
   row('性格', c.personality);
   row('背景・経歴', c.background);
   row('メモ', c.notes);
-  scrollHost.appendChild(rows);
+  info.appendChild(rows);
 
   const charEvents = State.data.timeline.filter(t=> t.charIds && t.charIds.includes(c.id)).sort((a,b)=>(a.order??0)-(b.order??0));
   if (charEvents.length){
-    scrollHost.appendChild(el('div', {class:'profile-section-label'}, ['この人物の年表']));
-    scrollHost.appendChild(buildTimelineList(charEvents));
+    info.appendChild(el('div', {class:'profile-section-label'}, ['この人物の年表']));
+    info.appendChild(buildTimelineList(charEvents));
   }
 
-  if (c.updatedBy) scrollHost.appendChild(el('div', {class:'updated-by', style:'margin-top:12px;'}, [`最終更新: ${c.updatedBy}`]));
+  if (c.updatedBy) info.appendChild(el('div', {class:'updated-by', style:'margin-top:12px;'}, [`最終更新: ${c.updatedBy}`]));
+  body.appendChild(info);
 
   const foot = el('div', {class:'modal-foot'});
   foot.appendChild(el('button', {class:'btn', onclick: closeModal}, ['閉じる']));
   foot.appendChild(el('button', {class:'btn btn-primary', onclick:()=>{ closeModal(); openCharacterForm(c); }}, ['編集する']));
-  modal.appendChild(scrollHost);
+  modal.appendChild(body);
   modal.appendChild(foot);
 
   back.appendChild(modal);
