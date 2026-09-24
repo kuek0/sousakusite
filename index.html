@@ -1230,7 +1230,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
           const files = Array.from(addInput.files || []);
           for (const file of files){
             try{
-              const result = await resizeImageFile(file, f.maxW||700, f.maxH||900, f.maxBytes||300000);
+              const result = f.crop===false ? await resizeImageFile(file, f.maxW||700, f.maxH||900, f.maxBytes||300000) : await openImageCropper(file);
               if (result) currentList.push(result);
             }catch(e){ toast('画像の読み込みに失敗しました'); }
           }
@@ -1718,8 +1718,7 @@ function openCharacterForm(existing){
     fields: [
       {key:'image', label:'アイコン画像（任意）', type:'image', hint:'アップロードすると自動で縮小されます。設定しない場合はイメージカラーで表示されます'},
       {key:'standingImage', label:'立ち絵（任意）', type:'image', crop:false, maxW:640, maxH:900, maxBytes:280000, hint:'プロフィール画面に大きく表示されます。透過PNGの全身イラストがおすすめです（背景は透過されたまま表示されます）。画像は他の画像欄と容量を共有するので、下の「画像合計」の表示を目安にしてください'},
-      {key:'expressions', label:'表情差分（任意・複数可）', type:'imageList', maxW:320, maxH:320, maxBytes:60000, hint:'顔だけの差分画像など。プロフィール画面で立ち絵の下に並びます（登録がなければ何も表示されません）'},
-      {key:'exprSize', label:'表情差分の表示サイズ', type:'select', options:[{value:'s',label:'小'},{value:'m',label:'中'},{value:'l',label:'大'}], default:'m'},
+      {key:'expressions', label:'表情差分（任意・複数可）', type:'imageList', hint:'アイコン画像と同じように、範囲を選んで切り抜けます。プロフィール画面で立ち絵の下に並びます（登録がなければ何も表示されません）'},
       {key:'refGallery', label:'設定資料（任意・複数可）', type:'imageList', maxW:900, maxH:900, maxBytes:200000, hint:'三面図など好きな画像をまとめられます。プロフィール画面ではボタンを押したときだけ表示されます'},
       {section:'名前'},
       {type:'pair', label:'氏名', fields:[
@@ -1820,8 +1819,7 @@ function openCharacterProfile(c){
 
   const exprList = Array.isArray(c.expressions) ? c.expressions : [];
   if (c.standingImage && exprList.length){
-    const exprPx = {s:40, m:56, l:76}[c.exprSize] || 56;
-    const strip = el('div', {class:'profile-expr-strip', style:`--expr-size:${exprPx}px;`});
+    const strip = el('div', {class:'profile-expr-strip'});
     exprList.forEach(img=>{
       const thumb = el('div', {class:'profile-expr-thumb'}, [ el('img', {src:img, alt:''}) ]);
       thumb.addEventListener('click', ()=>{
