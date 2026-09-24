@@ -1824,15 +1824,17 @@ function openCharacterProfile(c){
   const exprList = Array.isArray(c.expressions) ? c.expressions : [];
   if (c.standingImage && exprList.length){
     const strip = el('div', {class:'profile-expr-strip'});
-    exprList.forEach(img=>{
-      const thumb = el('div', {class:'profile-expr-thumb'}, [ el('img', {src:img, alt:''}) ]);
+    function addThumb(img, isDefault){
+      const thumb = el('div', {class:'profile-expr-thumb'+(isDefault?' active':'')}, [ el('img', {src:img, alt:''}) ]);
       thumb.addEventListener('click', ()=>{
         strip.querySelectorAll('.profile-expr-thumb').forEach(t=>t.classList.remove('active'));
         thumb.classList.add('active');
         if (artImgEl) artImgEl.src = img;
       });
       strip.appendChild(thumb);
-    });
+    }
+    addThumb(c.standingImage, true);
+    exprList.forEach(img=> addThumb(img, false));
     art.appendChild(strip);
   }
   body.appendChild(art);
