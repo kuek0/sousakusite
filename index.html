@@ -2,20 +2,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>創作ラボ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@600;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
 <style>
   :root{
     --bg:#FFFFFF;
     --surface:#FFFFFF;
-    --surface-2:#F4EFE3;
-    --ink:#2A2016;
-    --ink-soft:#5E4E38;
-    --ink-faint:#93816B;
-    --line:#EAE3D2;
-    --line-strong:#D3C7A0;
-    --accent:#6E2A28;
-    --accent-deep:#4F1E1C;
-    --accent-ink:#FBF8F0;
+    --surface-2:#F0F0EE;
+    --ink:#262626;
+    --ink-soft:#6E6E6E;
+    --ink-faint:#A0A09E;
+    --line:#EBEBE9;
+    --line-strong:#CFCFCB;
+    --accent:#262626;
+    --accent-deep:#171717;
+    --accent-ink:#FBFBFA;
     --teal:#0FA394;
     --yellow:#E0A63C;
     --purple:#7C5CFC;
@@ -23,18 +23,18 @@
     --green:#1FA070;
     --gray:#9C9A96;
     --neu-light: rgba(255,255,255,.9);
-    --neu-dark: rgba(110,90,58,.16);
+    --neu-dark: rgba(150,150,148,.16);
     --shadow: 7px 7px 14px var(--neu-dark), -7px -7px 14px var(--neu-light);
     --shadow-sm: 4px 4px 9px var(--neu-dark), -4px -4px 9px var(--neu-light);
     --shadow-inset: inset 4px 4px 8px var(--neu-dark), inset -4px -4px 8px var(--neu-light);
     --shadow-inset-sm: inset 2px 2px 5px var(--neu-dark), inset -2px -2px 5px var(--neu-light);
-    --ring: 0 0 0 1.5px rgba(42,32,22,.18);
-    --ring-hover: 0 0 0 1.5px rgba(42,32,22,.36);
+    --ring: 0 0 0 1.5px rgba(38,38,38,.18);
+    --ring-hover: 0 0 0 1.5px rgba(38,38,38,.36);
     --radius-lg: 14px;
     --radius-md: 10px;
     --radius-sm: 6px;
     --font-display:'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
-    --font-body:'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    --font-body:'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
   }
   *,*::before,*::after{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
@@ -50,8 +50,8 @@
     font-size:15px;
     line-height:1.7;
   }
-  h1,h2,h3,h4,button,input,select,textarea{ font-family:var(--font-display); }
-  h1,h2,h3,h4{ margin:0; text-wrap:balance; color:var(--ink); }
+  h1,h2,h3,h4{ font-family:var(--font-display); margin:0; text-wrap:balance; color:var(--ink); }
+  button,input,select,textarea{ font-family:var(--font-body); }
   p{ margin:0; }
   a{ color:var(--accent-deep); }
   ::selection{ background:var(--line-strong); color:var(--ink); }
@@ -77,7 +77,7 @@
   .btn-primary:active{ box-shadow:inset 3px 3px 6px var(--neu-dark), inset -3px -3px 6px var(--neu-light); }
   .btn-ghost{ background:transparent; box-shadow:var(--ring); color:var(--ink-soft); }
   .btn-ghost:hover{ color:var(--ink); background:var(--surface-2); box-shadow:var(--shadow-inset-sm), var(--ring-hover); }
-  .btn-danger{ background:#F3DDD6; color:var(--red); box-shadow:2px 2px 5px var(--neu-dark), -2px -2px 5px var(--neu-light), 0 0 0 1.5px rgba(226,78,106,.25); }
+  .btn-danger{ background:#FFF0EE; color:var(--red); box-shadow:2px 2px 5px var(--neu-dark), -2px -2px 5px var(--neu-light), 0 0 0 1.5px rgba(226,78,106,.25); }
   .btn-danger:hover{ box-shadow:3px 3px 7px var(--neu-dark), -3px -3px 7px var(--neu-light), 0 0 0 1.5px rgba(226,78,106,.4); }
   .btn-danger:active{ box-shadow:inset 2px 2px 5px var(--neu-dark), inset -2px -2px 5px var(--neu-light), 0 0 0 1.5px rgba(226,78,106,.4); }
   .btn-sm{ padding:6px 12px; font-size:12.5px; box-shadow:2.5px 2.5px 6px var(--neu-dark), -2.5px -2.5px 6px var(--neu-light), var(--ring); }
@@ -94,7 +94,7 @@
   input[type=number]::-webkit-outer-spin-button,
   input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   input::placeholder,textarea::placeholder{ color:var(--ink-faint); font-weight:400; opacity:1; }
-  input:focus,textarea:focus,select:focus{ outline:none; box-shadow:0 0 0 3px rgba(42,32,22,.24); }
+  input:focus,textarea:focus,select:focus{ outline:none; box-shadow:0 0 0 3px rgba(38,38,38,.24); }
   textarea{ resize:vertical; min-height:70px; }
   label.field{ display:block; margin-bottom:12px; }
   label.field > span{ display:block; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:5px; letter-spacing:.02em; }
@@ -109,14 +109,14 @@
   .swatch:hover{ transform:scale(1.15); }
   .swatch.active{ box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
   input.hexcode-input{ width:84px; font-family:monospace; font-size:12px; color:var(--ink-soft); background:var(--surface-2); padding:6px 8px; border-radius:8px; box-shadow:none; text-transform:uppercase; }
-  input.hexcode-input:focus{ color:var(--ink); box-shadow:0 0 0 3px rgba(42,32,22,.24); }
+  input.hexcode-input:focus{ color:var(--ink); box-shadow:0 0 0 3px rgba(38,38,38,.24); }
   .palette-bar{ display:flex; width:100%; max-width:360px; height:16px; border-radius:8px; overflow:hidden; box-shadow:var(--shadow-inset-sm); margin-bottom:14px; }
   .palette-bar-seg{ height:100%; transition:width .15s ease; }
   .palette-roles{ display:flex; flex-direction:column; gap:14px; }
   .palette-role-block{ display:flex; flex-direction:column; gap:6px; }
   .palette-role-top{ display:flex; align-items:center; gap:10px; }
   .palette-role-label{ font-size:12px; font-weight:700; color:var(--ink-soft); width:64px; flex:none; }
-  .palette-swatch{ width:32px; height:32px; border-radius:10px; flex:none; cursor:pointer; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--ink); position:relative; overflow:hidden; }
+  .palette-swatch{ width:32px; height:32px; border-radius:10px; flex:none; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--ink); position:relative; overflow:hidden; }
   .palette-role-slider-row{ display:flex; align-items:center; gap:8px; padding-left:74px; }
   input.palette-pct-slider{ flex:none; width:160px; max-width:50%; }
   .palette-pct-readout{
@@ -481,23 +481,10 @@
   .toast-wrap{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; align-items:center; }
 
   .mini-mascot{
-    position:fixed; right:20px; bottom:20px; width:66px; height:66px;
-    border-radius:48% 52% 47% 53% / 54% 45% 55% 46%;
+    position:fixed; right:20px; bottom:20px; width:66px; height:66px; border-radius:50%;
     background:var(--surface-2); box-shadow:var(--shadow-sm), var(--ring);
     z-index:40; pointer-events:auto; cursor:default; display:flex; align-items:center; justify-content:center; gap:11px;
     transition:width .5s cubic-bezier(.34,1.1,.64,1), height .5s cubic-bezier(.34,1.1,.64,1), gap .5s cubic-bezier(.34,1.1,.64,1);
-  }
-  .mini-mascot::before{
-    content:''; position:absolute; inset:-4px; pointer-events:none;
-    border-radius:55% 45% 58% 42% / 42% 60% 40% 58%;
-    border:1.5px solid rgba(42,32,22,.42);
-    transform:rotate(-4deg);
-  }
-  .mini-mascot::after{
-    content:''; position:absolute; inset:-2px; pointer-events:none;
-    border-radius:42% 58% 44% 56% / 58% 40% 60% 42%;
-    border:1px solid rgba(42,32,22,.28);
-    transform:rotate(3deg);
   }
   .mascot-big{ width:92px; height:92px; gap:15px; }
   .mascot-eye{ width:16px; height:19px; position:relative; flex:none; }
@@ -514,12 +501,7 @@
     position:fixed; z-index:46; pointer-events:none; font-size:13px; font-weight:800; color:var(--ink-faint);
     animation:mascotZzzFloat 1.8s ease-out forwards;
   }
-  .mini-mascot-dark{
-    background:
-      repeating-linear-gradient(115deg, rgba(255,255,255,.055) 0 1px, transparent 1px 3px),
-      repeating-linear-gradient(25deg, rgba(255,255,255,.045) 0 1px, transparent 1px 4px),
-      #1A1A1A;
-  }
+  .mini-mascot-dark{ background:#1A1A1A; }
   .mini-mascot-dark .mascot-pupil{ background:#FFFFFF; }
   @keyframes mascotRainbowSpin{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
   .mascot-rainbow{ animation:mascotRainbowSpin 1.2s linear infinite; }
@@ -1197,7 +1179,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
     if (f.type==='pair'){
       const rowWrap = el('div', {style:'display:flex; gap:10px;'});
       f.fields.forEach(sub=>{
-        const subInput = el('input', {type:'text', placeholder: sub.placeholder||'', style:'flex:1; min-width:0;'});
+        const subInput = el('input', {type: sub.type||'text', placeholder: sub.placeholder||'', style:'flex:1; min-width:0;'});
         subInput.value = initial[sub.key] ?? '';
         fieldRefs[sub.key] = subInput;
         rowWrap.appendChild(subInput);
@@ -1352,21 +1334,15 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
         const roleBlock = el('div', {class:'palette-role-block'});
         const topRow = el('div', {class:'palette-role-top'});
         topRow.appendChild(el('span', {class:'palette-role-label'}, [r.label]));
-        const swatchBtn = el('label', {class:'palette-swatch', style:`background:${r.color};`});
-        const colorInput = el('input', {type:'color', style:'opacity:0; width:1px; height:1px; position:absolute;'});
-        colorInput.value = r.color;
+        const swatchBtn = el('div', {class:'palette-swatch', style:`background:${r.color};`});
         const hexInput = el('input', {type:'text', class:'hexcode-input palette-hex', maxlength:7});
         hexInput.value = r.color.toUpperCase();
-        colorInput.addEventListener('input', ()=>{
-          r.color = colorInput.value; swatchBtn.style.background = r.color; hexInput.value = r.color.toUpperCase(); refreshBar();
-        });
         hexInput.addEventListener('change', ()=>{
           let v = hexInput.value.trim();
           if (v && !v.startsWith('#')) v = '#'+v;
-          if (/^#[0-9A-Fa-f]{6}$/.test(v)){ r.color = v; colorInput.value = v; swatchBtn.style.background = v; hexInput.value = v.toUpperCase(); refreshBar(); }
+          if (/^#[0-9A-Fa-f]{6}$/.test(v)){ r.color = v; swatchBtn.style.background = v; hexInput.value = v.toUpperCase(); refreshBar(); }
           else hexInput.value = r.color.toUpperCase();
         });
-        swatchBtn.appendChild(colorInput);
         topRow.appendChild(swatchBtn);
         topRow.appendChild(hexInput);
         roleBlock.appendChild(topRow);
@@ -1484,7 +1460,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
     const out = {};
     fields.forEach(f=>{
       if (f.section) return;
-      if (f.type==='pair'){ f.fields.forEach(sub=>{ out[sub.key] = fieldRefs[sub.key].value; }); return; }
+      if (f.type==='pair'){ f.fields.forEach(sub=>{ const v = fieldRefs[sub.key].value; out[sub.key] = sub.type==='number' ? (v===''?null:Number(v)) : v; }); return; }
       if (f.type==='palette'){ PALETTE_ROLES.forEach(r=>{ out[r.key] = fieldRefs[r.key].value; out[r.pctKey] = fieldRefs[r.pctKey].value; }); return; }
       const ref = fieldRefs[f.key];
       if (f.type==='checkbox') out[f.key] = !!ref.checked;
@@ -1898,9 +1874,11 @@ function openCharacterForm(existing){
       {section:'基本情報'},
       {key:'roles', label:'役割（複数選択可）', type:'tags', options:projectRoleOptions(), hint:'候補から選ぶか、新しい役割をその場で追加できます。追加した役割はこの作品の他のキャラクターでも選べるようになります', full:true},
       {key:'affiliation', label:'所属', type:'text', placeholder:'例: 〇〇学園'},
-      {key:'birthYear', label:'生年', type:'number', placeholder:'例: 1005', narrow:true},
-      {key:'deathYear', label:'没年（存命なら空欄）', type:'number', placeholder:'例: 1023', narrow:true},
-      {key:'age', label:'年齢（任意）', type:'number', placeholder:'例: 18', narrow:true},
+      {type:'pair', label:'生年・没年・年齢', full:true, fields:[
+        {key:'birthYear', type:'number', placeholder:'生年 例: 1005'},
+        {key:'deathYear', type:'number', placeholder:'没年（存命なら空欄）'},
+        {key:'age', type:'number', placeholder:'年齢（任意）'}
+      ], hint:'それぞれ空欄でも構いません'},
       {section:'特徴'},
       {key:'motif', label:'モチーフ（任意）', type:'text', placeholder:'例: 桜 / 狼 / 月 など'},
       {key:'battleStyle', label:'戦闘スタイル', type:'textarea', placeholder:'得意な武器・技、戦い方の特徴など', rows:2},
