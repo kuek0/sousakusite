@@ -115,10 +115,10 @@
   .palette-role-label{ font-size:12px; font-weight:700; color:var(--ink-soft); width:64px; flex:none; }
   .palette-swatch{ width:32px; height:32px; border-radius:10px; flex:none; cursor:pointer; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--ink); position:relative; overflow:hidden; }
   .palette-role-slider-row{ display:flex; align-items:center; gap:8px; padding-left:74px; }
-  .palette-pct-slider{ flex:none; width:160px; max-width:50%; }
+  input.palette-pct-slider{ flex:none; width:160px; max-width:50%; }
   .palette-pct-readout{
     font-size:12px; font-family:monospace; color:var(--ink-soft); background:var(--surface-2);
-    width:42px; text-align:right; flex:none; padding:4px 6px; border-radius:8px; box-shadow:none;
+    width:42px; max-width:42px; text-align:right; flex:none; padding:4px 6px; border-radius:8px; box-shadow:none;
   }
   .palette-pct-suffix{ font-size:12px; color:var(--ink-faint); flex:none; }
   .palette-total{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
@@ -405,7 +405,8 @@
   .sidebar::-webkit-scrollbar-thumb:hover{ background-color:var(--ink-faint); }
   .modal h3{ font-size:18px; font-weight:800; margin-bottom:16px; }
   .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 20px; }
-  .form-grid label.field{ margin-bottom:12px; }
+  .form-grid label.field{ margin-bottom:12px; min-width:0; }
+  .field-narrow input{ max-width:120px; }
   .form-section-title{
     grid-column:1 / -1; font-size:12px; font-weight:800; color:var(--accent-deep); text-transform:uppercase;
     letter-spacing:.05em; padding-bottom:6px; margin:14px 0 4px; border-bottom:1px solid var(--line);
@@ -1169,7 +1170,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
       fieldsHost.appendChild(heading);
       return;
     }
-    const wrap = el('label', {class:'field'}, [el('span', {}, [f.label])]);
+    const wrap = el('label', {class:'field'+(f.narrow?' field-narrow':'')}, [el('span', {}, [f.label])]);
     if (wide && (FULL_WIDTH_TYPES.includes(f.type) || f.full)) wrap.style.gridColumn = '1 / -1';
     let input;
     if (f.type==='pair'){
@@ -1663,6 +1664,13 @@ function projectRoleOptions(){
   State.data.characters.forEach(c=> charRoles(c).forEach(r=> set.add(r)));
   return Array.from(set);
 }
+function charRolesSorted(c){
+  const order = projectRoleOptions();
+  return [...charRoles(c)].sort((a,b)=>{
+    const ia = order.indexOf(a), ib = order.indexOf(b);
+    return (ia<0?999:ia) - (ib<0?999:ib);
+  });
+}
 function charBirthYear(c){ return c.birthYear!=null ? c.birthYear : extractYear(c.birth); }
 function charDeathYear(c){ return c.deathYear!=null ? c.deathYear : extractYear(c.death); }
 function charAge(c){ return c.age!=null ? c.age : null; }
@@ -1869,9 +1877,9 @@ function openCharacterForm(existing){
       {section:'基本情報'},
       {key:'roles', label:'役割（複数選択可）', type:'tags', options:projectRoleOptions(), hint:'候補から選ぶか、新しい役割をその場で追加できます。追加した役割はこの作品の他のキャラクターでも選べるようになります', full:true},
       {key:'affiliation', label:'所属', type:'text', placeholder:'例: 〇〇学園'},
-      {key:'birthYear', label:'生年', type:'number', placeholder:'例: 1005'},
-      {key:'deathYear', label:'没年（存命なら空欄）', type:'number', placeholder:'例: 1023'},
-      {key:'age', label:'年齢（任意）', type:'number', placeholder:'例: 18'},
+      {key:'birthYear', label:'生年', type:'number', placeholder:'例: 1005', narrow:true},
+      {key:'deathYear', label:'没年（存命なら空欄）', type:'number', placeholder:'例: 1023', narrow:true},
+      {key:'age', label:'年齢（任意）', type:'number', placeholder:'例: 18', narrow:true},
       {section:'特徴'},
       {key:'motif', label:'モチーフ（任意）', type:'text', placeholder:'例: 桜 / 狼 / 月 など'},
       {key:'battleStyle', label:'戦闘スタイル', type:'textarea', placeholder:'得意な武器・技、戦い方の特徴など', rows:2},
@@ -1976,7 +1984,7 @@ function openCharacterProfile(c){
   info.appendChild(el('div', {class:'profile-info-head'}, [
     el('h3', {class:'profile-info-name'}, [charFullName(c) || c.name || '(名前未設定)']),
     charReading(c) ? el('div', {class:'profile-info-reading'}, [charReading(c)]) : null,
-    charRoles(c).length ? el('div', {class:'profile-info-meta'}, charRoles(c).map(r=> el('span', {class:'ch-role'}, [r]))) : null
+    charRoles(c).length ? el('div', {class:'profile-info-meta'}, charRolesSorted(c).map(r=> el('span', {class:'ch-role'}, [r]))) : null
   ]));
 
   const rows = el('div', {class:'profile-rows'});
@@ -2390,7 +2398,7 @@ function openTimelineForm(existing, presetCharId){
     initial: existing || { order: (State.data.timeline.length ? Math.max(...State.data.timeline.map(t=>t.order||0))+10 : 10), charIds: presetCharId ? [presetCharId] : [] },
     fields: [
       {key:'dateLabel', label:'時期（自由記述）', type:'text', placeholder:'例: 1020年 春 / 第3章 冒頭'},
-      {key:'order', label:'並び順（小さいほど先）', type:'number'},
+      {key:'order', label:'並び順（小さいほど先）', type:'number', narrow:true},
       {key:'title', label:'出来事タイトル', type:'text', placeholder:'例: 二人が出会う'},
       {key:'description', label:'詳細', type:'textarea', rows:3},
       {key:'charIds', label:'関連キャラクター', type:'multiselect', options:charOpts},
