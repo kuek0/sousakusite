@@ -5,25 +5,25 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;900&display=swap">
 <style>
   :root{
-    --bg:#F3ECDC;
-    --surface:#F3ECDC;
-    --surface-2:#EAE0C6;
+    --bg:#FFFFFF;
+    --surface:#FFFFFF;
+    --surface-2:#F4EFE3;
     --ink:#2A2016;
     --ink-soft:#5E4E38;
     --ink-faint:#93816B;
-    --line:#E2D6B8;
-    --line-strong:#C6B488;
+    --line:#EAE3D2;
+    --line-strong:#D3C7A0;
     --accent:#6E2A28;
     --accent-deep:#4F1E1C;
-    --accent-ink:#F3ECDC;
+    --accent-ink:#FBF8F0;
     --teal:#0FA394;
     --yellow:#E0A63C;
     --purple:#7C5CFC;
     --red:#E24E6B;
     --green:#1FA070;
     --gray:#9C9A96;
-    --neu-light: rgba(255,250,235,.65);
-    --neu-dark: rgba(110,90,58,.22);
+    --neu-light: rgba(255,255,255,.9);
+    --neu-dark: rgba(110,90,58,.16);
     --shadow: 7px 7px 14px var(--neu-dark), -7px -7px 14px var(--neu-light);
     --shadow-sm: 4px 4px 9px var(--neu-dark), -4px -4px 9px var(--neu-light);
     --shadow-inset: inset 4px 4px 8px var(--neu-dark), inset -4px -4px 8px var(--neu-light);
@@ -90,6 +90,9 @@
     padding:10px 12px; font-size:14px; font-weight:500; font-family:var(--font-body); background:var(--surface-2); color:var(--ink);
     box-shadow:none;
   }
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
   input::placeholder,textarea::placeholder{ color:var(--ink-faint); font-weight:400; opacity:1; }
   input:focus,textarea:focus,select:focus{ outline:none; box-shadow:0 0 0 3px rgba(42,32,22,.24); }
   textarea{ resize:vertical; min-height:70px; }
@@ -426,7 +429,7 @@
   .profile-art-refbtn{
     position:absolute; left:10px; bottom:10px; z-index:2; border:none; cursor:pointer;
     font-size:11px; font-weight:700; padding:5px 12px; border-radius:999px; font-family:var(--font-body);
-    background:rgba(243,236,220,.9); color:var(--ink); box-shadow:var(--shadow-sm);
+    background:rgba(255,255,255,.9); color:var(--ink); box-shadow:var(--shadow-sm);
   }
   .profile-art-refbtn:hover{ background:var(--bg); }
   .ref-gallery-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
@@ -478,10 +481,23 @@
   .toast-wrap{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; align-items:center; }
 
   .mini-mascot{
-    position:fixed; right:20px; bottom:20px; width:66px; height:66px; border-radius:50%;
+    position:fixed; right:20px; bottom:20px; width:66px; height:66px;
+    border-radius:48% 52% 47% 53% / 54% 45% 55% 46%;
     background:var(--surface-2); box-shadow:var(--shadow-sm), var(--ring);
     z-index:40; pointer-events:auto; cursor:default; display:flex; align-items:center; justify-content:center; gap:11px;
     transition:width .5s cubic-bezier(.34,1.1,.64,1), height .5s cubic-bezier(.34,1.1,.64,1), gap .5s cubic-bezier(.34,1.1,.64,1);
+  }
+  .mini-mascot::before{
+    content:''; position:absolute; inset:-4px; pointer-events:none;
+    border-radius:55% 45% 58% 42% / 42% 60% 40% 58%;
+    border:1.5px solid rgba(42,32,22,.42);
+    transform:rotate(-4deg);
+  }
+  .mini-mascot::after{
+    content:''; position:absolute; inset:-2px; pointer-events:none;
+    border-radius:42% 58% 44% 56% / 58% 40% 60% 42%;
+    border:1px solid rgba(42,32,22,.28);
+    transform:rotate(3deg);
   }
   .mascot-big{ width:92px; height:92px; gap:15px; }
   .mascot-eye{ width:16px; height:19px; position:relative; flex:none; }
@@ -498,7 +514,12 @@
     position:fixed; z-index:46; pointer-events:none; font-size:13px; font-weight:800; color:var(--ink-faint);
     animation:mascotZzzFloat 1.8s ease-out forwards;
   }
-  .mini-mascot-dark{ background:#1A1A1A; }
+  .mini-mascot-dark{
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,.055) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(25deg, rgba(255,255,255,.045) 0 1px, transparent 1px 4px),
+      #1A1A1A;
+  }
   .mini-mascot-dark .mascot-pupil{ background:#FFFFFF; }
   @keyframes mascotRainbowSpin{ from{ filter:hue-rotate(0deg); } to{ filter:hue-rotate(360deg); } }
   .mascot-rainbow{ animation:mascotRainbowSpin 1.2s linear infinite; }
