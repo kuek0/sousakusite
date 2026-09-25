@@ -2,39 +2,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>創作ラボ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;900&display=swap">
 <style>
   :root{
-    --bg:#FBFBFA;
-    --surface:#FBFBFA;
-    --surface-2:#EFEFEE;
-    --ink:#262625;
-    --ink-soft:#77756F;
-    --ink-faint:#AAA8A2;
-    --line:#EFEFEE;
-    --line-strong:#DAD9D6;
-    --accent:#242322;
-    --accent-deep:#191918;
-    --accent-ink:#FFFFFF;
+    --bg:#F3ECDC;
+    --surface:#F3ECDC;
+    --surface-2:#EAE0C6;
+    --ink:#2A2016;
+    --ink-soft:#5E4E38;
+    --ink-faint:#93816B;
+    --line:#E2D6B8;
+    --line-strong:#C6B488;
+    --accent:#6E2A28;
+    --accent-deep:#4F1E1C;
+    --accent-ink:#F3ECDC;
     --teal:#0FA394;
     --yellow:#E0A63C;
     --purple:#7C5CFC;
     --red:#E24E6B;
     --green:#1FA070;
     --gray:#9C9A96;
-    --neu-light: rgba(255,255,255,.95);
-    --neu-dark: rgba(190,188,184,.35);
+    --neu-light: rgba(255,250,235,.65);
+    --neu-dark: rgba(110,90,58,.22);
     --shadow: 7px 7px 14px var(--neu-dark), -7px -7px 14px var(--neu-light);
     --shadow-sm: 4px 4px 9px var(--neu-dark), -4px -4px 9px var(--neu-light);
     --shadow-inset: inset 4px 4px 8px var(--neu-dark), inset -4px -4px 8px var(--neu-light);
     --shadow-inset-sm: inset 2px 2px 5px var(--neu-dark), inset -2px -2px 5px var(--neu-light);
-    --ring: 0 0 0 1.5px rgba(36,35,34,.16);
-    --ring-hover: 0 0 0 1.5px rgba(36,35,34,.32);
-    --radius-lg: 22px;
-    --radius-md: 16px;
-    --radius-sm: 10px;
-    --font-display:'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
-    --font-body:'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+    --ring: 0 0 0 1.5px rgba(42,32,22,.18);
+    --ring-hover: 0 0 0 1.5px rgba(42,32,22,.36);
+    --radius-lg: 14px;
+    --radius-md: 10px;
+    --radius-sm: 6px;
+    --font-display:'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    --font-body:'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
   }
   *,*::before,*::after{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
@@ -71,13 +71,13 @@
   }
   .btn:hover{ box-shadow:var(--shadow), var(--ring-hover); }
   .btn:active{ box-shadow:var(--shadow-inset-sm), var(--ring-hover); transform:scale(.96); }
-  .btn:focus-visible{ outline:3px solid var(--purple); outline-offset:2px; }
+  .btn:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
   .btn-primary{ background:var(--accent); color:var(--accent-ink); box-shadow:5px 5px 10px var(--neu-dark), -5px -5px 10px var(--neu-light); }
   .btn-primary:hover{ box-shadow:7px 7px 14px var(--neu-dark), -7px -7px 14px var(--neu-light); }
   .btn-primary:active{ box-shadow:inset 3px 3px 6px var(--neu-dark), inset -3px -3px 6px var(--neu-light); }
   .btn-ghost{ background:transparent; box-shadow:var(--ring); color:var(--ink-soft); }
   .btn-ghost:hover{ color:var(--ink); background:var(--surface-2); box-shadow:var(--shadow-inset-sm), var(--ring-hover); }
-  .btn-danger{ background:#FFF0EE; color:var(--red); box-shadow:2px 2px 5px var(--neu-dark), -2px -2px 5px var(--neu-light), 0 0 0 1.5px rgba(226,78,106,.25); }
+  .btn-danger{ background:#F3DDD6; color:var(--red); box-shadow:2px 2px 5px var(--neu-dark), -2px -2px 5px var(--neu-light), 0 0 0 1.5px rgba(226,78,106,.25); }
   .btn-danger:hover{ box-shadow:3px 3px 7px var(--neu-dark), -3px -3px 7px var(--neu-light), 0 0 0 1.5px rgba(226,78,106,.4); }
   .btn-danger:active{ box-shadow:inset 2px 2px 5px var(--neu-dark), inset -2px -2px 5px var(--neu-light), 0 0 0 1.5px rgba(226,78,106,.4); }
   .btn-sm{ padding:6px 12px; font-size:12.5px; box-shadow:2.5px 2.5px 6px var(--neu-dark), -2.5px -2.5px 6px var(--neu-light), var(--ring); }
@@ -91,7 +91,7 @@
     box-shadow:none;
   }
   input::placeholder,textarea::placeholder{ color:var(--ink-faint); font-weight:400; opacity:1; }
-  input:focus,textarea:focus,select:focus{ outline:none; box-shadow:0 0 0 3px rgba(36,35,34,.28); }
+  input:focus,textarea:focus,select:focus{ outline:none; box-shadow:0 0 0 3px rgba(42,32,22,.24); }
   textarea{ resize:vertical; min-height:70px; }
   label.field{ display:block; margin-bottom:12px; }
   label.field > span{ display:block; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:5px; letter-spacing:.02em; }
@@ -106,7 +106,7 @@
   .swatch:hover{ transform:scale(1.15); }
   .swatch.active{ box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
   input.hexcode-input{ width:84px; font-family:monospace; font-size:12px; color:var(--ink-soft); background:var(--surface-2); padding:6px 8px; border-radius:8px; box-shadow:none; text-transform:uppercase; }
-  input.hexcode-input:focus{ color:var(--ink); box-shadow:0 0 0 3px rgba(36,35,34,.28); }
+  input.hexcode-input:focus{ color:var(--ink); box-shadow:0 0 0 3px rgba(42,32,22,.24); }
   .palette-bar{ display:flex; width:100%; max-width:360px; height:16px; border-radius:8px; overflow:hidden; box-shadow:var(--shadow-inset-sm); margin-bottom:14px; }
   .palette-bar-seg{ height:100%; transition:width .15s ease; }
   .palette-roles{ display:flex; flex-direction:column; gap:14px; }
@@ -426,9 +426,9 @@
   .profile-art-refbtn{
     position:absolute; left:10px; bottom:10px; z-index:2; border:none; cursor:pointer;
     font-size:11px; font-weight:700; padding:5px 12px; border-radius:999px; font-family:var(--font-body);
-    background:rgba(255,255,255,.88); color:var(--ink); box-shadow:var(--shadow-sm);
+    background:rgba(243,236,220,.9); color:var(--ink); box-shadow:var(--shadow-sm);
   }
-  .profile-art-refbtn:hover{ background:#fff; }
+  .profile-art-refbtn:hover{ background:var(--bg); }
   .ref-gallery-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
   .ref-gallery-img{ width:100%; border-radius:var(--radius-sm); box-shadow:var(--shadow-sm); display:block; cursor:zoom-in; transition:transform .12s ease; }
   .ref-gallery-img:hover{ transform:scale(1.02); }
