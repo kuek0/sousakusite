@@ -1103,12 +1103,23 @@ function openImageCropper(file){
           canvas.width = outSize; canvas.height = outSize;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, outSize, outSize);
-          let quality = 0.86, dataUrl = canvas.toDataURL('image/jpeg', quality);
-          let attempts = 0;
-          while (dataUrl.length > maxBytes*1.37 && attempts < 6){
-            quality = Math.max(0.35, quality-0.15);
+          const pngUrl = canvas.toDataURL('image/png');
+          let dataUrl;
+          if (pngUrl.length <= maxBytes*1.37){
+            dataUrl = pngUrl;
+          } else {
+            // Too large to keep as lossless PNG: flatten onto a neutral background and fall back to JPEG.
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = '#F4F3F1';
+            ctx.fillRect(0, 0, outSize, outSize);
+            let quality = 0.86;
             dataUrl = canvas.toDataURL('image/jpeg', quality);
-            attempts++;
+            let attempts = 0;
+            while (dataUrl.length > maxBytes*1.37 && attempts < 6){
+              quality = Math.max(0.35, quality-0.15);
+              dataUrl = canvas.toDataURL('image/jpeg', quality);
+              attempts++;
+            }
           }
           cleanup();
           resolve(dataUrl);
