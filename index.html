@@ -1149,7 +1149,8 @@ let modalStackCount = 0;
 function lockBodyScroll(){ modalStackCount++; document.body.style.overflow = 'hidden'; }
 function unlockBodyScroll(){ modalStackCount = Math.max(0, modalStackCount-1); if (modalStackCount===0) document.body.style.overflow = ''; }
 function closeModal(){ document.getElementById('modalRoot').innerHTML=''; unlockBodyScroll(); }
-function confirmDialog(message){
+function confirmDialog(message, opts){
+  opts = opts || {};
   return new Promise((resolve)=>{
     lockBodyScroll();
     const back = el('div', {class:'modal-back', style:'z-index:150;'});
@@ -1157,8 +1158,8 @@ function confirmDialog(message){
     const scrollHost = el('div', {class:'modal-scroll'});
     scrollHost.appendChild(el('div', {style:'font-size:14.5px; line-height:1.6; color:var(--ink);'}, [message]));
     const foot = el('div', {class:'modal-foot'});
-    foot.appendChild(el('button', {class:'btn', onclick:()=>{ back.remove(); unlockBodyScroll(); resolve(false); }}, ['キャンセル']));
-    foot.appendChild(el('button', {class:'btn btn-danger', onclick:()=>{ back.remove(); unlockBodyScroll(); resolve(true); }}, ['削除する']));
+    foot.appendChild(el('button', {class:'btn', onclick:()=>{ back.remove(); unlockBodyScroll(); resolve(false); }}, [opts.cancelLabel || 'キャンセル']));
+    foot.appendChild(el('button', {class: opts.danger===false ? 'btn btn-primary' : 'btn btn-danger', onclick:()=>{ back.remove(); unlockBodyScroll(); resolve(true); }}, [opts.confirmLabel || '削除する']));
     box.appendChild(scrollHost);
     box.appendChild(foot);
     back.appendChild(box);
@@ -1170,7 +1171,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
   const root = document.getElementById('modalRoot');
   root.innerHTML = '';
   lockBodyScroll();
-  const back = el('div', {class:'modal-back', onclick:(e)=>{ if(e.target===back) closeModal(); }});
+  const back = el('div', {class:'modal-back'});
   const modal = el('div', {class:'modal'+(wide?' modal-wide':'')});
   const scrollHost = el('div', {class:'modal-scroll'});
   scrollHost.appendChild(el('h3', {}, [title]));
@@ -1477,15 +1478,7 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
 
   if (onReady) onReady(fieldRefs, modal);
 
-  const foot = el('div', {class:'modal-foot'});
-  if (onDelete){
-    foot.appendChild(el('button', {class:'btn btn-danger', onclick: async ()=>{
-      if (await confirmDialog('本当に削除しますか？この操作は取り消せません。')){ onDelete(); closeModal(); }
-    }}, ['削除']));
-    foot.appendChild(el('div', {style:'flex:1'}));
-  }
-  foot.appendChild(el('button', {class:'btn', onclick: closeModal}, ['キャンセル']));
-  const submitBtn = el('button', {class:'btn btn-primary', onclick:()=>{
+  function collectValues(){
     const out = {};
     fields.forEach(f=>{
       if (f.section) return;
@@ -1502,6 +1495,37 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
       else if (f.type==='number') out[f.key] = ref.value===''? null : Number(ref.value);
       else out[f.key] = ref.value;
     });
+    return out;
+  }
+  function isDirty(){
+    const out = collectValues();
+    const colorA = charColorList({color:out.color, colors:out.colors, colorPcts:out.colorPcts});
+    const colorB = charColorList(initial);
+    if (JSON.stringify(colorA) !== JSON.stringify(colorB)) return true;
+    return Object.keys(out).some(k=>{
+      if (k==='color' || k==='colors' || k==='colorPcts') return false;
+      const a = out[k], b = initial[k];
+      if (Array.isArray(a) || Array.isArray(b)) return JSON.stringify(a||[]) !== JSON.stringify(b||[]);
+      if ((a===''||a==null) && (b===''||b==null)) return false;
+      return a !== b;
+    });
+  }
+  async function tryClose(){
+    if (isDirty() && !(await confirmDialog('保存されていない変更があります。閉じてもよろしいですか？', {confirmLabel:'閉じる', cancelLabel:'編集に戻る', danger:false}))) return;
+    closeModal();
+  }
+  back.addEventListener('click', (e)=>{ if (e.target===back) tryClose(); });
+
+  const foot = el('div', {class:'modal-foot'});
+  if (onDelete){
+    foot.appendChild(el('button', {class:'btn btn-danger', onclick: async ()=>{
+      if (await confirmDialog('本当に削除しますか？この操作は取り消せません。')){ onDelete(); closeModal(); }
+    }}, ['削除']));
+    foot.appendChild(el('div', {style:'flex:1'}));
+  }
+  foot.appendChild(el('button', {class:'btn', onclick: tryClose}, ['キャンセル']));
+  const submitBtn = el('button', {class:'btn btn-primary', onclick:()=>{
+    const out = collectValues();
     if (celebrate) spawnParticles(submitBtn);
     Promise.resolve(onSubmit(out)).catch(err=>{
       console.error(err);
@@ -1720,7 +1744,7 @@ function filterCharacters(list){
   const q = charSearchText.trim().toLowerCase();
   return list.filter(c=>{
     if (!q) return true;
-    const hay = [c.name, charReading(c), ...charRoles(c), c.affiliation, c.personality, c.background, c.notes].filter(Boolean).join(' ').toLowerCase();
+    const hay = [c.name, charReading(c), ...charRoles(c), c.affiliation, c.personality, c.catchphrase, c.background, c.notes].filter(Boolean).join(' ').toLowerCase();
     return hay.includes(q);
   });
 }
@@ -1918,8 +1942,9 @@ function openCharacterForm(existing){
       {key:'motif', label:'モチーフ（任意）', type:'text', placeholder:'例: 桜 / 狼 / 月 など'},
       {key:'battleStyle', label:'戦闘スタイル', type:'textarea', placeholder:'得意な武器・技、戦い方の特徴など', rows:2},
       {section:'詳細'},
-      {key:'appearance', label:'外見', type:'textarea', placeholder:'背格好、服装の特徴など', rows:2},
-      {key:'personality', label:'性格', type:'textarea', placeholder:'性格や口癖など', rows:2},
+      {key:'appearance', label:'外見', type:'textarea', placeholder:'背格好、服装の特徴など', rows:3},
+      {key:'personality', label:'性格', type:'textarea', placeholder:'性格の特徴など', rows:3},
+      {key:'catchphrase', label:'口癖', type:'textarea', placeholder:'よく使うセリフや口癖など', rows:2},
       {key:'background', label:'背景・経歴', type:'textarea', placeholder:'生い立ちや設定の詳細', rows:3},
       {key:'notes', label:'メモ', type:'textarea', placeholder:'その他の覚え書き', rows:2},
       {section:'画像'},
@@ -2042,6 +2067,7 @@ function openCharacterProfile(c){
   row('戦闘スタイル', c.battleStyle);
   row('外見', c.appearance);
   row('性格', c.personality);
+  row('口癖', c.catchphrase);
   row('背景・経歴', c.background);
   row('メモ', c.notes);
   info.appendChild(rows);
