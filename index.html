@@ -117,7 +117,7 @@
   .palette-role-top{ display:flex; align-items:center; gap:10px; }
   .palette-remove-btn{ margin-left:auto; }
   .palette-role-label{ font-size:12px; font-weight:700; color:var(--ink-soft); width:64px; flex:none; }
-  .palette-swatch{ width:32px; height:32px; border-radius:10px; flex:none; cursor:pointer; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--ink); position:relative; overflow:hidden; }
+  .palette-swatch{ width:32px; height:32px; border-radius:10px; flex:none; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--ink); position:relative; overflow:hidden; }
   .palette-role-slider-row{ display:flex; align-items:center; gap:8px; padding-left:74px; }
   input.palette-pct-slider{ flex:none; width:160px; max-width:50%; }
   .palette-pct-readout{
@@ -1353,21 +1353,15 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
           const roleBlock = el('div', {class:'palette-role-block'});
           const topRow = el('div', {class:'palette-role-top'});
           topRow.appendChild(el('span', {class:'palette-role-label'}, [`カラー${idx+1}`]));
-          const swatchBtn = el('label', {class:'palette-swatch', style:`background:${r.color};`});
-          const colorInput = el('input', {type:'color', style:'opacity:0; width:1px; height:1px; position:absolute;'});
-          colorInput.value = r.color;
+          const swatchBtn = el('div', {class:'palette-swatch', style:`background:${r.color};`});
           const hexInput = el('input', {type:'text', class:'hexcode-input palette-hex', maxlength:7});
           hexInput.value = r.color.toUpperCase();
-          colorInput.addEventListener('input', ()=>{
-            r.color = colorInput.value; swatchBtn.style.background = r.color; hexInput.value = r.color.toUpperCase(); refreshBar();
-          });
           hexInput.addEventListener('change', ()=>{
             let v = hexInput.value.trim();
             if (v && !v.startsWith('#')) v = '#'+v;
-            if (/^#[0-9A-Fa-f]{6}$/.test(v)){ r.color = v; colorInput.value = v; swatchBtn.style.background = v; hexInput.value = v.toUpperCase(); refreshBar(); }
+            if (/^#[0-9A-Fa-f]{6}$/.test(v)){ r.color = v; swatchBtn.style.background = v; hexInput.value = v.toUpperCase(); refreshBar(); }
             else hexInput.value = r.color.toUpperCase();
           });
-          swatchBtn.appendChild(colorInput);
           topRow.appendChild(swatchBtn);
           topRow.appendChild(hexInput);
           if (state.length > 1){
