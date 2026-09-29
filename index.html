@@ -472,9 +472,14 @@
   .tag-add-row{ display:flex; gap:8px; margin-top:8px; }
   .tag-add-row input{ flex:1; }
   .tag-add-row .btn{ flex:none; padding:6px 16px; }
-  .ms-chip{ font-size:12px; padding:4px 10px; border-radius:999px; border:none; background:var(--bg); font-weight:700; color:var(--ink-soft); box-shadow:var(--shadow-inset-sm), var(--ring); cursor:pointer; }
+  .ms-chip{ font-size:12px; padding:4px 10px; border-radius:999px; border:none; background:var(--bg); font-weight:700; color:var(--ink-soft); box-shadow:var(--shadow-inset-sm), var(--ring); cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
   .ms-chip:hover{ box-shadow:var(--shadow-inset-sm), var(--ring-hover); }
   .ms-chip.on{ background:var(--accent-deep); color:#fff; box-shadow:var(--shadow-sm); }
+  .ms-chip-delete{
+    display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px;
+    border-radius:50%; font-size:11px; line-height:1; color:inherit; opacity:.6;
+  }
+  .ms-chip-delete:hover{ opacity:1; background:rgba(0,0,0,.15); }
   .suggest-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .suggest-chip{ font-family:var(--font-body); font-size:12px; padding:4px 12px; border-radius:999px; border:none; background:var(--bg); font-weight:700; color:var(--ink-soft); box-shadow:var(--shadow-inset-sm), var(--ring); cursor:pointer; }
   .suggest-chip:hover{ color:var(--accent-deep); box-shadow:var(--shadow-inset-sm), var(--ring-hover); }
@@ -1441,6 +1446,14 @@ function openForm({title, fields, initial, submitLabel, onSubmit, onDelete, cele
             if (selected.has(v)) selected.delete(v); else selected.add(v);
             renderChips();
           }}, [v]);
+          if (f.deletable && f.deletable(v)){
+            chip.appendChild(el('span', {class:'ms-chip-delete', onclick: async (e)=>{
+              e.stopPropagation();
+              if (!f.onDeleteOption) return;
+              const ok = await f.onDeleteOption(v);
+              if (ok){ selected.delete(v); renderChips(); }
+            }}, ['×']));
+          }
           box.appendChild(chip);
         });
       }
@@ -1720,6 +1733,15 @@ function projectRoleOptions(){
   State.data.characters.forEach(c=> charRoles(c).forEach(r=> set.add(r)));
   return Array.from(set);
 }
+async function deleteRoleEverywhere(roleName){
+  const affected = State.data.characters.filter(c=> charRoles(c).includes(roleName));
+  await Promise.all(affected.map(c=>{
+    const patch = { roles: charRoles(c).filter(r=> r!==roleName), updatedBy: nick() };
+    if (c.role === roleName) patch.role = null;
+    return Store.updateDoc(State.currentProjectId, 'characters', c.id, patch);
+  }));
+  toast(`「${roleName}」を削除しました`);
+}
 function charRolesSorted(c){
   const order = projectRoleOptions();
   return [...charRoles(c)].sort((a,b)=>{
@@ -1931,7 +1953,14 @@ function openCharacterForm(existing){
       {key:'middleName', label:'ミドルネーム（あれば）', type:'text', placeholder:'例: ジョン'},
       {key:'name', label:'表示名', type:'text', placeholder:'例: 主人公 太郎', hint:'キャラクター一覧・関係図など、他のタブでの表示に使われる名前です。空欄なら苗字・名前・ミドルネームから自動で作成されます', full:true},
       {section:'基本情報'},
-      {key:'roles', label:'役割（複数選択可）', type:'tags', options:projectRoleOptions(), hint:'候補から選ぶか、新しい役割をその場で追加できます。追加した役割はこの作品の他のキャラクターでも選べるようになります', full:true},
+      {key:'roles', label:'役割（複数選択可）', type:'tags', options:projectRoleOptions(),
+        deletable: v => !ROLE_OPTIONS.some(o=>o.value===v),
+        onDeleteOption: async (v)=>{
+          if (!(await confirmDialog(`「${v}」という役割を削除しますか？この作品の他のキャラクターに設定されている分も含めて、すべて削除されます。`, {confirmLabel:'削除する', cancelLabel:'キャンセル'}))) return false;
+          await deleteRoleEverywhere(v);
+          return true;
+        },
+        hint:'候補から選ぶか、新しい役割をその場で追加できます。追加した役割はこの作品の他のキャラクターでも選べるようになります。×で役割そのものを削除できます（既定の候補は削除できません）', full:true},
       {key:'affiliation', label:'所属', type:'text', placeholder:'例: 〇〇学園'},
       {type:'pair', label:'生年・没年・年齢', full:true, fields:[
         {key:'birthYear', type:'number', placeholder:'生年 例: 1005'},
