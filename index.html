@@ -1750,7 +1750,7 @@ function filterCharacters(list){
   const q = charSearchText.trim().toLowerCase();
   return list.filter(c=>{
     if (!q) return true;
-    const hay = [c.name, charReading(c), ...charRoles(c), c.affiliation, c.personality, c.catchphrase, c.background, c.notes].filter(Boolean).join(' ').toLowerCase();
+    const hay = [c.name, charReading(c), ...charRoles(c), c.affiliation, c.personality, c.speechEnding, c.catchphrase, c.battleLine, c.victoryLine, c.defeatLine, c.background, c.notes].filter(Boolean).join(' ').toLowerCase();
     return hay.includes(q);
   });
 }
@@ -1950,7 +1950,15 @@ function openCharacterForm(existing){
       {section:'詳細'},
       {key:'appearance', label:'外見', type:'textarea', placeholder:'背格好、服装の特徴など', rows:3},
       {key:'personality', label:'性格', type:'textarea', placeholder:'性格の特徴など', rows:3},
-      {key:'catchphrase', label:'口癖', type:'textarea', placeholder:'よく使うセリフや口癖など', rows:2},
+      {type:'pair', label:'口調', fields:[
+        {key:'speechEnding', placeholder:'語尾（例: ～だよ）'},
+        {key:'catchphrase', placeholder:'口癖'}
+      ]},
+      {type:'pair', label:'セリフ（任意）', fields:[
+        {key:'battleLine', placeholder:'戦闘中'},
+        {key:'victoryLine', placeholder:'勝利'},
+        {key:'defeatLine', placeholder:'敗北'}
+      ]},
       {key:'background', label:'背景・経歴', type:'textarea', placeholder:'生い立ちや設定の詳細', rows:3},
       {key:'notes', label:'メモ', type:'textarea', placeholder:'その他の覚え書き', rows:2},
       {section:'画像'},
@@ -2073,7 +2081,11 @@ function openCharacterProfile(c){
   row('戦闘スタイル', c.battleStyle);
   row('外見', c.appearance);
   row('性格', c.personality);
+  row('語尾', c.speechEnding);
   row('口癖', c.catchphrase);
+  row('戦闘中のセリフ', c.battleLine);
+  row('勝利時のセリフ', c.victoryLine);
+  row('敗北時のセリフ', c.defeatLine);
   row('背景・経歴', c.background);
   row('メモ', c.notes);
   info.appendChild(rows);
