@@ -2043,7 +2043,7 @@ function openCharacterForm(existing){
 function buildPaletteBlock(c){
   const wrap = el('div', {});
   const { colors, pcts } = charColorList(c);
-  if (colors.length > 1){
+  if (colors.length){
     const total = pcts.reduce((s,p)=> s + Math.max(p,0), 0) || 1;
     const bar = el('div', {class:'profile-palette-bar'});
     colors.forEach((col,i)=>{
